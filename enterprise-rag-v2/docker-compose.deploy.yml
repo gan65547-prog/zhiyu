@@ -1,0 +1,206 @@
+# 部署说明：
+# - 镜像不内置 .env；配置来自同目录 .env（compose 自动加载）或 environment 下 ${VAR}。
+# - 发布时优先设置 WEB_IMAGE / WORKER_IMAGE 为不可变 digest（例如 registry/app@sha256:...）。
+# - 仅本地兼容场景可使用 IMAGE_TAG 回退；生产 Release Profile 不允许使用 latest。
+# - 修改 INTERNAL_* / 密钥后：编辑 .env → docker compose -f docker-compose.deploy.yml up -d（无需重建镜像）。
+services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:15-alpine}
+    environment:
+      POSTGRES_DB: ragdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  qdrant:
+    image: ${QDRANT_IMAGE:-qdrant/qdrant:v1.12.5}
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    volumes:
+      - ./data/qdrant:/qdrant/storage
+    restart: always
+
+  web:
+    # 使用本地构建的镜像
+    image: ${WEB_IMAGE:-enterprise-rag-v2-web:${IMAGE_TAG:-release-latest}}
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:${DB_PASSWORD:?DB_PASSWORD must be set}@db:5432/ragdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-documents}
+      QDRANT_VECTOR_SIZE: ${QDRANT_VECTOR_SIZE:-512}
+      # 默认镜像内 /opt/models/...（构建时 PRELOAD_BGE_MODEL=1）；无预置时可在宿主机 shared 下载后设 .env 覆盖
+      EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-/opt/models/bge-small-zh-v1.5}
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-${DEEPSEEK_API_KEY:-}}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.deepseek.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-deepseek-chat}
+      LLM_PROVIDER: ${LLM_PROVIDER:-deepseek}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-chat}
+      OLLAMA_URL: ${OLLAMA_URL:-http://localhost:11434}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      CSRF_SECRET: ${CSRF_SECRET:?CSRF_SECRET must be set}
+      APP_VERSION: ${APP_VERSION:-unknown}
+      IMAGE_TAG: ${IMAGE_TAG:-latest}
+      RELEASED_AT: ${RELEASED_AT:-}
+      RELEASE_GIT_TAG: ${RELEASE_GIT_TAG:-}
+      RELEASE_GIT_SHA: ${RELEASE_GIT_SHA:-}
+      # 内部运维 /internal/admin：须在同目录 .env 中设置 JSON 数组，见 .env.deploy.example
+      INTERNAL_API_KEYS: ${INTERNAL_API_KEYS:?INTERNAL_API_KEYS must be set}
+      INTERNAL_IP_WHITELIST: ${INTERNAL_IP_WHITELIST:?INTERNAL_IP_WHITELIST must be set}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-20}
+      DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-10}
+      # 知识卡片审核回流基座 RAG（2.3.0 KB-01）；web 触发回流、worker 消费索引任务
+      KNOWLEDGE_BACKFLOW_ENABLED: ${KNOWLEDGE_BACKFLOW_ENABLED:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    ports:
+      - "${WEB_HOST_PORT:-8000}:8000"
+    volumes:
+      - ./runtime:/app/runtime
+      - ./runtime/uploads:/app/uploads
+      - ./shared:/app/shared
+    restart: always
+
+  # ========== Celery Flower 任务监控（可选）==========
+  flower:
+    image: ${FLOWER_IMAGE:-mher/flower:2.0.1}
+    command: [
+      "celery", "-A", "infrastructure.queue.celery_app.celery_app", "flower",
+      "--port=5555",
+      "--url-prefix=flower",
+    ]
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      FLOWER_UNAUTHENTICATED_API: "true"
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    depends_on:
+      redis:
+        condition: service_healthy
+    profiles:
+      - flower
+    restart: unless-stopped
+
+  worker:
+    image: ${WORKER_IMAGE:-enterprise-rag-v2-worker:${IMAGE_TAG:-release-latest}}
+    command: ["celery", "-A", "infrastructure.queue.celery_app.celery_app", "worker", "-l", "INFO", "--concurrency=4", "-Q", "documents_high,chat_async,celery"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:${DB_PASSWORD:?DB_PASSWORD must be set}@db:5432/ragdb
+      DB_POOL_SIZE: 5
+      DB_MAX_OVERFLOW: 5
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-documents}
+      QDRANT_VECTOR_SIZE: ${QDRANT_VECTOR_SIZE:-512}
+      EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-/opt/models/bge-small-zh-v1.5}
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-${DEEPSEEK_API_KEY:-}}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.deepseek.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-deepseek-chat}
+      LLM_PROVIDER: ${LLM_PROVIDER:-deepseek}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-chat}
+      OLLAMA_URL: ${OLLAMA_URL:-http://localhost:11434}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      LOG_FILE_PATH: /app/shared/logs/app.log
+      LOG_MAX_FILE_SIZE: ${LOG_MAX_FILE_SIZE:-10485760}
+      LOG_BACKUP_COUNT: ${LOG_BACKUP_COUNT:-5}
+      LOG_MAX_AGE_DAYS: ${LOG_MAX_AGE_DAYS:-7}
+      LOG_MAX_TOTAL_BYTES: ${LOG_MAX_TOTAL_BYTES:-2147483648}
+      APP_VERSION: ${APP_VERSION:-unknown}
+      IMAGE_TAG: ${IMAGE_TAG:-latest}
+      RELEASED_AT: ${RELEASED_AT:-}
+      RELEASE_GIT_TAG: ${RELEASE_GIT_TAG:-}
+      RELEASE_GIT_SHA: ${RELEASE_GIT_SHA:-}
+      KNOWLEDGE_BACKFLOW_ENABLED: ${KNOWLEDGE_BACKFLOW_ENABLED:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    volumes:
+      - ./runtime:/app/runtime
+      - ./runtime/uploads:/app/uploads
+      - ./shared:/app/shared
+    restart: always
+
+  beat:
+    image: ${WORKER_IMAGE:-enterprise-rag-v2-worker:${IMAGE_TAG:-release-latest}}
+    command: ["celery", "-A", "infrastructure.queue.celery_app.celery_app", "beat", "-l", "INFO"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:${DB_PASSWORD:?DB_PASSWORD must be set}@db:5432/ragdb
+      DB_POOL_SIZE: 5
+      DB_MAX_OVERFLOW: 5
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-documents}
+      QDRANT_VECTOR_SIZE: ${QDRANT_VECTOR_SIZE:-512}
+      EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-/opt/models/bge-small-zh-v1.5}
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://hf-mirror.com}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-${DEEPSEEK_API_KEY:-}}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.deepseek.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-deepseek-chat}
+      LLM_PROVIDER: ${LLM_PROVIDER:-deepseek}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-chat}
+      OLLAMA_URL: ${OLLAMA_URL:-http://localhost:11434}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      APP_VERSION: ${APP_VERSION:-unknown}
+      IMAGE_TAG: ${IMAGE_TAG:-latest}
+      RELEASED_AT: ${RELEASED_AT:-}
+      RELEASE_GIT_TAG: ${RELEASE_GIT_TAG:-}
+      RELEASE_GIT_SHA: ${RELEASE_GIT_SHA:-}
+      KNOWLEDGE_BACKFLOW_ENABLED: ${KNOWLEDGE_BACKFLOW_ENABLED:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    volumes:
+      - ./runtime:/app/runtime
+      - ./runtime/uploads:/app/uploads
+      - ./shared:/app/shared
+    restart: always

@@ -1,0 +1,55 @@
+// ============================================
+// Card Component Overrides - 卡片组件样式
+// ============================================
+
+@use '../tokens/typography' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/transitions' as *;
+
+.el-card {
+  border-radius: $radius-base;
+  border: 1px solid var(--el-border-color-light);
+  box-shadow: $shadow-sm;
+  transition: $transition-base, $transition-shadow;
+  background-color: var(--el-bg-color);
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: var(--el-border-color);
+    transform: translateY(-2px);
+  }
+
+  .el-card__header {
+    padding: $spacing-4 $spacing-6;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    font-weight: $font-weight-semibold;
+    color: var(--el-text-color-primary);
+    background-color: transparent;
+  }
+
+  .el-card__body {
+    padding: $spacing-6;
+    color: var(--el-text-color-regular);
+  }
+}
+
+// Dark mode card styles
+html.dark {
+  .el-card {
+    background-color: var(--el-bg-color-overlay);
+    border-color: var(--el-border-color);
+    box-shadow: $shadow-dark-sm;
+
+    &:hover {
+      box-shadow: $shadow-dark-md;
+      border-color: var(--el-border-color-light);
+    }
+
+    .el-card__header {
+      border-bottom-color: var(--el-border-color);
+      color: var(--el-text-color-primary);
+    }
+  }
+}

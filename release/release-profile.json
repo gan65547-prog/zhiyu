@@ -1,0 +1,263 @@
+{
+  "profile_version": 1,
+  "release_id": "2.3.0",
+  "status": "draft",
+  "owner": "release-owner",
+  "scope": "Enterprise RAG 基座（认证与隔离、文档处理与问答、运维 API 与部署安全基线）+ AI 工作台（素材、知识、研究、工作台聚合、受控 Agent、学习诊断与知识回流）。本 Profile 是历史候选的公开验收范围，不代表当前 main 已发布或生产部署。公众号真实发布联调、抖音/知乎连接器、自动平台发布及内容中心仍按下方条件与排除项处理。",
+  "version_history": [
+    {
+      "release_id": "2.1.1",
+      "note": "RAG 基座候选（4 个 MVP 能力），已通过预发验证并归档证据；本文件自 2026-09-13 起原地升级至 2.2.0，MVP-01~04 基线命令保持不变。"
+    },
+    {
+      "release_id": "2.2.0",
+      "updated": "2026-09-13",
+      "note": "新增 WB-01~06 工作台能力与排除项；原始候选证据和内部上线计划由维护者在仓库外受控归档。"
+    },
+    {
+      "release_id": "2.3.0",
+      "updated": "2026-09-16",
+      "note": "新增 KB-01/WC-01/LD-01 能力与排除项；MVP-01~04 与 WB-01~06 基线命令不变。公众号真实联调仍待资质与当前环境验证。历史手工证据不随公开源码发布。"
+    }
+  ],
+  "required_capabilities": [
+    {
+      "id": "MVP-01",
+      "name": "认证、会话和多租户访问隔离",
+      "test_id": "RAG-AUTH-ISOLATION",
+      "evidence": "pytest 日志、当前 HEAD、跨租户拒绝断言",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "合法用户可完成认证和会话基本流程。",
+        "跨租户访问及非授权资源访问被拒绝。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/integration/test_auth_flow.py tests/e2e/test_rag_workflow.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "MVP-02",
+      "name": "文档处理、检索与对话闭环",
+      "test_id": "RAG-DOCUMENT-CHAT",
+      "evidence": "pytest 日志、当前 HEAD、文档生命周期与对话断言",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "文档可上传、处理、重建索引并进入检索链路。",
+        "对话可创建和延续，返回链路可追溯。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_document_service.py tests/integration/test_chat_flow.py tests/e2e/test_rag_workflow.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "MVP-03",
+      "name": "独立运维控制面权限边界",
+      "test_id": "OPS-RBAC",
+      "evidence": "ops-center pytest 日志、当前 HEAD、读写角色拒绝断言",
+      "risk": "P0",
+      "owner": "ops",
+      "acceptance_criteria": [
+        "运维登录和角色授权正确执行。",
+        "写操作需授权、操作者标识与合法幂等键。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd ops-center && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/test_auth_router.py tests/test_rbac_enforcement.py tests/test_operations_router.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "MVP-04",
+      "name": "生产配置、备份和回滚准备",
+      "test_id": "DEPLOY-ROLLBACK",
+      "evidence": "候选环境部署记录、备份恢复演练记录、回滚演练记录与版本/配置哈希",
+      "risk": "P0",
+      "owner": "devops",
+      "acceptance_criteria": [
+        "生产密钥、内部运维密钥和来源白名单使用非默认值。",
+        "当前候选完成备份恢复与回滚演练，并在证据中记录结果。"
+      ],
+      "verification": {
+        "mode": "hybrid",
+        "commands": [
+          "cd enterprise-rag-v2 && DB_PASSWORD=release-config-check-password-2026 JWT_SECRET=release-config-check-jwt-secret-2026 CSRF_SECRET=release-config-check-csrf-secret-2026 INTERNAL_API_KEYS='[\"release-config-check-key\"]' INTERNAL_IP_WHITELIST='[\"127.0.0.1\"]' docker compose -f docker-compose.deploy.yml config >/dev/null"
+        ]
+      }
+    },
+    {
+      "id": "WB-01",
+      "name": "素材导入与处理闭环",
+      "test_id": "WB-ASSET-CYCLE",
+      "evidence": "pytest 日志、当前 HEAD、导入处理与失败重试断言；前端 workbench.spec.ts 由 C-03 CI E2E 运行提供（运行链接归档 /secure/evidence/）",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "文件/URL/粘贴文本导入后进入处理并最终 ready。",
+        "失败态持久化且可重试。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_asset_service.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "WB-02",
+      "name": "知识卡片与证据链",
+      "test_id": "WB-KNOWLEDGE-EVIDENCE",
+      "evidence": "pytest 日志、当前 HEAD、无证据拒审与版本回滚断言",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "无证据的知识卡片不可审核通过。",
+        "知识卡片版本回滚可用。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_knowledge_service.py tests/unit/services/test_knowledge_tasks.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "WB-03",
+      "name": "研究运行生命周期",
+      "test_id": "WB-RESEARCH-LIFECYCLE",
+      "evidence": "pytest 日志、当前 HEAD、三终态与配额降级断言；E2E research-run.spec.ts 由 C-03 CI 提供",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "研究运行可达 completed/failed/cancelled 三终态。",
+        "配额超限被拒；外部搜索未配置时降级为内部来源。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_research_service.py tests/unit/services/test_external_search.py tests/unit/services/test_safe_fetcher.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "WB-04",
+      "name": "工作台聚合与搜索租户隔离",
+      "test_id": "WB-WORKBENCH-ISOLATION",
+      "evidence": "pytest 日志、当前 HEAD、聚合与并发隔离断言",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "/workbench/search 与 /workbench/tasks 只返回本租户数据。",
+        "多租户并发场景下聚合结果互不串扰。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_workbench_service.py tests/integration/test_multitenant_workbench_concurrency.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "WB-05",
+      "name": "工作台跨租户越权矩阵",
+      "test_id": "WB-CROSS-TENANT-MATRIX",
+      "evidence": "pytest 日志、当前 HEAD、参数化越权矩阵全部 403/404 断言",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "租户 A 资源被租户 B 用户/非成员用户 C 访问时全部返回 403/404。",
+        "矩阵覆盖素材、知识卡片、研究、内容草稿、工作台聚合与基座文档/数据集（见方案 C-05 用例集）。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/security/test_cross_tenant_matrix.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "WB-06",
+      "name": "Agent 白名单工作流与调度",
+      "test_id": "WB-AGENT-GOVERNANCE",
+      "evidence": "pytest 日志、当前 HEAD、审批与工具执行断言；Beat 到期投递需 staging 手动证据（--manual-evidence WB-06=...）",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "asset_organize/research_analysis 审批后可执行，外部工具执行前强制审批。",
+        "Beat 到期投递真实发生（staging 手动证据）。"
+      ],
+      "verification": {
+        "mode": "hybrid",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_agent_runtime_tool_execution.py tests/unit/services/test_agent_schedule.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "KB-01",
+      "name": "知识卡片回流基座 RAG",
+      "test_id": "KB-KNOWLEDGE-BACKFLOW",
+      "evidence": "pytest 日志、当前 HEAD、回流幂等与回滚删除断言",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "审核通过的知识卡片渲染为文档进入所属 workspace 的系统数据集并触发索引，重复审核幂等。",
+        "回 draft/回滚后已回流文档与向量被移除，旧结论不再被检索命中。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_knowledge_backflow_service.py tests/unit/services/test_knowledge_service.py -q --tb=short"
+        ]
+      }
+    },
+    {
+      "id": "LD-01",
+      "name": "学习诊断五阶段流水线与属主隔离",
+      "test_id": "LD-LEARNING-DIAGNOSIS",
+      "evidence": "pytest 日志、当前 HEAD、SSE 事件序列与 IDOR 404 拒绝断言",
+      "risk": "P0",
+      "owner": "backend",
+      "acceptance_criteria": [
+        "5 阶段诊断流水线可完成并落库，SSE 事件序列完整（stage/progress/content/sources/done）。",
+        "报告与练习接口非属主访问返回 404；LLM 失败不阻塞报告落库。"
+      ],
+      "verification": {
+        "mode": "automated",
+        "commands": [
+          "cd enterprise-rag-v2 && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit/services/test_learning_diagnosis_service.py tests/security/test_learning_report_access.py -q --tb=short"
+        ]
+      }
+    }
+  ],
+  "conditional_capabilities": [
+    "KB Sync 仅在本次变更涉及 documents/kb 或同步工作流时执行。",
+    "P2 内容中心与外部搜索为实验/降级能力，不设 required capability，发布说明必须明示其非承诺状态。",
+    "公众号内容发布与指标回流（WeChatPublisher，单测 26 例在库）为实验能力：未认证服务号无 freepublish 权限，真实联调（C-17）顺延至资质具备，资质到位后 WC-01 升回 required。"
+  ],
+  "exclusions": [
+    "抖音、知乎连接器（pending_adapter）、公众号真实发布联调（待认证服务号资质，D4 未满足）与 X 真实账号联调（OAuth 仅有代码与单测证据）。",
+    "真实平台自动采集与自动定时发布（公众号发布为人工触发单次提交，审核状态仅单次查询）。",
+    "发布记录自动重试队列与线级幂等键（状态机仅排期路径防重，登记债务）。",
+    "学习诊断 tenant_id 列迁移与历史数据回填（隔离为 user 级过渡态）。",
+    "知识回流的前端 UI 变更（回流文档在文档列表天然可见，不新增界面）。",
+    "LLM provider 私有方法 _get_client() 耦合重构（登记债务）。",
+    "更开放的 Agent 类型与模型增强（当前 Runtime 非完整 Agent 平台）。",
+    "2FA、IP 白名单、会话时长的强制拦截（设置页当前仅保存偏好，属已知限制）。",
+    "OCR（图片/扫描 PDF）保持待启用状态。"
+  ],
+  "release_rules": {
+    "all_required_pass": true,
+    "unknown_blocks_release": true,
+    "current_candidate_evidence_required": true,
+    "tag_requires_verified_commit": true
+  }
+}

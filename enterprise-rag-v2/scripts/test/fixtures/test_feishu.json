@@ -1,0 +1,37 @@
+{
+  "schema": "2.0",
+  "header": {
+    "event_id": "test_event",
+    "token": "Z4ry6ywxLuBgMmBtMt1Dcc4Ivemwy4gG",
+    "create_time": "1775610000",
+    "event_type": "im.message.receive_v1",
+    "tenant_key": "test_tenant"
+  },
+  "event": {
+    "message": {
+      "message_id": "msg_123",
+      "root_id": "root_123",
+      "parent_id": "",
+      "create_time": "1775610000",
+      "chat_id": "oc_123",
+      "chat_type": "group",
+      "chat_name": "测试群",
+      "sender": {
+        "sender_id": {
+          "open_id": "ou_123",
+          "user_id": "user_123"
+        },
+        "sender_type": "user"
+      },
+      "content": "{\"text\":\"你好，测试消息\"}",
+      "message_type": "text"
+    },
+    "sender": {
+      "sender_id": {
+        "open_id": "ou_123",
+        "user_id": "user_123"
+      },
+      "sender_type": "user"
+    }
+  }
+}

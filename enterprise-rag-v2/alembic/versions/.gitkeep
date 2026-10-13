@@ -1,0 +1,5 @@
+# 迁移脚本目录
+
+此目录用于存储Alembic生成的数据库迁移脚本。
+
+使用 `alembic revision --autogenerate -m "message"` 生成迁移脚本。

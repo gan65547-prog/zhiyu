@@ -1,0 +1,49 @@
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+gunicorn==21.2.0
+
+# Database and migration
+sqlalchemy==2.0.23
+greenlet>=3.0.0,<4
+alembic==1.12.1
+aiosqlite==0.19.0
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+databases[postgresql]==0.9.0
+
+# Cache / queue / vector db
+redis==5.0.1
+celery==5.3.4
+qdrant-client==1.16.1
+
+# Security and auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+cryptography==44.0.0
+
+# Config and transport
+pydantic[email]==2.10.0
+pydantic-settings==2.1.0
+httpx==0.28.1
+aiofiles==23.2.1
+
+# Logging and monitoring
+structlog==23.2.0
+prometheus-client==0.19.0
+
+# Document and model processing
+pypdf2==3.0.1
+pytesseract==0.3.13
+Pillow>=10,<12
+python-docx==1.1.0
+openpyxl==3.1.2
+beautifulsoup4==4.12.2
+ebooklib==0.18
+# 2.2.2 与 numpy 2.x / 新版 torch 易冲突；4.x 与当前 SentenceTransformer API 兼容
+sentence-transformers==4.1.0
+numpy>=2.0,<3
+
+# Commercialization
+jinja2==3.1.2

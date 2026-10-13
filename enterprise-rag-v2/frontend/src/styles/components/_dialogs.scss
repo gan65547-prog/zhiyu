@@ -1,0 +1,116 @@
+// ============================================
+// Dialog Component Overrides - 对话框组件样式
+// ============================================
+
+@use '../tokens/typography' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/transitions' as *;
+
+.el-dialog {
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+  background-color: var(--el-bg-color);
+  border: none;
+
+  .el-dialog__header {
+    padding: $spacing-6;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    margin-right: 0;
+
+    .el-dialog__title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: var(--el-text-color-primary);
+    }
+
+    .el-dialog__headerbtn {
+      top: $spacing-5;
+      right: $spacing-5;
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      color: var(--el-text-color-secondary);
+      transition: $transition-color;
+
+      &:hover {
+        color: var(--el-text-color-primary);
+        background-color: var(--el-fill-color-light);
+        border-radius: $radius-sm;
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: $spacing-6;
+    color: var(--el-text-color-regular);
+    line-height: 1.6;
+  }
+
+  .el-dialog__footer {
+    padding: $spacing-4 $spacing-6;
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+}
+
+// Overlay (blur removed to avoid glassmorphism click-blocking)
+.el-overlay {
+  background-color: var(--el-overlay-color, rgba(0, 0, 0, 0.5));
+}
+
+// Drawer component (similar to dialog)
+.el-drawer {
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+  background-color: var(--el-bg-color);
+
+  .el-drawer__header {
+    padding: $spacing-6;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    color: var(--el-text-color-primary);
+
+    .el-drawer__close-btn {
+      color: var(--el-text-color-secondary);
+
+      &:hover {
+        color: var(--el-text-color-primary);
+      }
+    }
+  }
+
+  .el-drawer__body {
+    padding: 0;
+    color: var(--el-text-color-regular);
+  }
+}
+
+// Dark mode dialog/drawer styles
+html.dark {
+  .el-dialog,
+  .el-drawer {
+    background-color: var(--el-bg-color-overlay);
+    box-shadow: $shadow-dark-xl;
+    border: 1px solid var(--el-border-color);
+
+    .el-dialog__header,
+    .el-drawer__header {
+      border-bottom-color: var(--el-border-color);
+      color: var(--el-text-color-primary);
+    }
+
+    .el-dialog__body,
+    .el-drawer__body {
+      color: var(--el-text-color-regular);
+    }
+
+    .el-dialog__footer {
+      border-top-color: var(--el-border-color);
+    }
+  }
+
+  .el-overlay {
+    background-color: var(--el-overlay-color, rgba(0, 0, 0, 0.7));
+  }
+}

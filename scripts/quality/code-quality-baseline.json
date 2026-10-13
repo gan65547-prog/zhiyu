@@ -1,0 +1,49 @@
+{
+  "policy": "baseline is a measured debt record; baseline items may grow within review budget, new structural violations and budget overruns block",
+  "files": {
+    "enterprise-rag-v2/api/routers/documents.py": {"max_lines": 801, "reason": "现有文档导入、生命周期和标注路由的历史债务；后续按文档读取、导入和标注边界拆分"},
+    "enterprise-rag-v2/infrastructure/database/models.py": {
+      "max_lines": 2108,
+      "growth_budget_lines": 520,
+      "reason": "历史统一 ORM 模型注册表；知识关系、内容连接器凭据等同一领域模型可在预算内自然增长，迁移拆分需按完整领域边界进行，不因绝对行数机械拆分；本次预算调整对应新增内容发布凭据领域模型"
+    },
+    "enterprise-rag-v2/services/impl/chat_service.py": {"max_lines": 825, "reason": "现有对话流式与异步编排的历史债务；后续按会话、检索和流式输出边界拆分"},
+    "enterprise-rag-v2/services/impl/document_service.py": {"max_lines": 803, "reason": "现有文档生命周期编排的历史债务；后续按上传、处理和索引端口拆分"},
+    "enterprise-rag-v2/services/impl/learning_diagnosis_service.py": {"max_lines": 899},
+    "enterprise-rag-v2/services/impl/tenant_service.py": {"max_lines": 846}
+  },
+  "functions": {
+    "enterprise-rag-v2/api/middleware/security.py::__call__": {"max_lines": 74, "max_complexity": 17},
+    "enterprise-rag-v2/api/routers/content.py::complete_x_oauth": {"max_lines": 64, "max_complexity": 16, "reason": "OAuth 回调的状态校验、凭据交换和审计仍处于同一安全事务，后续按端口拆分"},
+    "enterprise-rag-v2/api/routers/documents.py::import_wechat_chat": {"max_lines": 133, "max_complexity": 19},
+    "enterprise-rag-v2/core/config.py::validate_production_secrets": {"max_lines": 39, "max_complexity": 16},
+    "enterprise-rag-v2/core/rag/wechat_parser.py::_parse_csv": {"max_lines": 44, "max_complexity": 20},
+    "enterprise-rag-v2/core/rag/wechat_parser.py::_parse_txt": {"max_lines": 69, "max_complexity": 18},
+    "enterprise-rag-v2/core/rag/llm_provider.py::_deterministic_evidence_response": {"max_lines": 42, "max_complexity": 16, "reason": "证据回退响应需保持单一可追溯输出契约，后续按证据格式化器拆分"},
+    "enterprise-rag-v2/core/rag/vector_store.py::upsert": {"max_lines": 63, "max_complexity": 19, "reason": "向量写入同时处理批次、维度和重试兼容，后续按批处理端口拆分"},
+    "enterprise-rag-v2/services/impl/auth_service.py::register": {"max_lines": 144, "max_complexity": 20},
+    "enterprise-rag-v2/services/impl/chat_service.py::chat": {"max_lines": 177, "max_complexity": 28},
+    "enterprise-rag-v2/services/impl/chat_service.py::chat_stream": {"max_lines": 176, "max_complexity": 25},
+    "enterprise-rag-v2/services/impl/document_service.py::list_documents": {"max_lines": 67, "max_complexity": 20},
+    "enterprise-rag-v2/services/impl/document_service.py::process_document": {"max_lines": 341, "max_complexity": 48, "reason": "现有文档处理流程包含文件、进度和索引一致性事务，后续按处理阶段拆分"},
+    "enterprise-rag-v2/services/impl/agent_runtime_service.py::review_approval": {"max_lines": 33, "max_complexity": 16, "reason": "审批状态转换和审计写入必须保持同一事务，后续抽取状态策略"},
+    "enterprise-rag-v2/services/impl/content_connector_registry.py::dispatch": {"max_lines": 36, "max_complexity": 20, "reason": "连接器路由需要在单一入口执行能力和租户凭据校验，后续按连接器策略拆分"},
+    "enterprise-rag-v2/services/impl/content_metric_sync_service.py::execute": {"max_lines": 58, "max_complexity": 18, "reason": "指标同步的幂等、状态和审计写入需保持同一用例边界，后续按平台适配器拆分"},
+    "enterprise-rag-v2/services/impl/dataset_service.py::list_datasets": {"max_lines": 76, "max_complexity": 18, "reason": "列表查询包含租户、工作空间和权限过滤，后续抽取查询规格对象"},
+    "enterprise-rag-v2/services/impl/document_service.py::list_documents": {"max_lines": 69, "max_complexity": 22, "reason": "文档列表必须统一执行租户、工作空间和分页过滤，后续抽取查询规格对象"},
+    "enterprise-rag-v2/infrastructure/queue/research_tasks.py::_synthesize_with_configured_model": {"max_lines": 39, "max_complexity": 16, "reason": "研究结果合成需保留模型配置和可追溯回退路径，后续按模型端口拆分"},
+    "enterprise-rag-v2/infrastructure/queue/research_tasks.py::_run_research_async": {"max_lines": 73, "max_complexity": 20, "reason": "研究任务状态、配额和失败收敛必须保持同一异步用例边界，后续抽取状态协调器"},
+    "enterprise-rag-v2/services/impl/learning_diagnosis_service.py::_stage4_llm_generate_report": {"max_lines": 67, "max_complexity": 17},
+    "enterprise-rag-v2/services/impl/learning_diagnosis_service.py::analyze_stream": {"max_lines": 125, "max_complexity": 27},
+    "enterprise-rag-v2/services/impl/learning_diagnosis_service.py::start_practice": {"max_lines": 119, "max_complexity": 19},
+    "enterprise-rag-v2/services/impl/tenant_service.py::create_tenant": {"max_lines": 151, "max_complexity": 19},
+    "enterprise-rag-v2/services/impl/tenant_service.py::delete_tenant": {"max_lines": 124, "max_complexity": 16},
+    "enterprise-rag-v2/services/impl/tenant_service.py::list_tenants": {"max_lines": 88, "max_complexity": 18},
+    "enterprise-rag-v2/services/impl/tenant_service.py::update_tenant": {"max_lines": 93, "max_complexity": 18},
+    "enterprise-rag-v2/services/impl/user_service_impl.py::create_user": {"max_lines": 132, "max_complexity": 21},
+    "enterprise-rag-v2/services/impl/user_service_impl.py::update_user": {"max_lines": 128, "max_complexity": 23},
+    "enterprise-rag-v2/services/ops/cache_invalidation.py::invalidate_ops_caches": {"max_lines": 65, "max_complexity": 18},
+    "enterprise-rag-v2/services/permission_checker.py::check_conversation_access": {"max_lines": 122, "max_complexity": 19},
+    "ops-center/app/services/business_gateway.py::request": {"max_lines": 176, "max_complexity": 30}
+  }
+}

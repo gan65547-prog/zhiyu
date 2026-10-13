@@ -1,0 +1,62 @@
+# 发版后自动将仓库内知识 Markdown 同步到 enterprise-rag-v2 数据集（kb-sync）。
+# 需在 GitHub 仓库配置：Secrets.KB_SYNC_TOKEN；Variables.KB_SYNC_BASE_URL、Variables.KB_SYNC_DATASET_ID。
+# Tag 校验与主设计 FR-06 一致：仅 vMAJOR.MINOR.PATCH（数字段），见下方「Validate release tag format」步骤。
+# 说明见：documents/design/项目开发资料与业务流程知识库及日志定位能力落地设计-v1.md
+
+name: KB Sync
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      # 宽匹配以便 push 事件进入；**实际是否执行 kb-sync** 由步骤「Validate release tag format」用正则约束为 v1.2.3 形式
+      - "v*"
+
+concurrency:
+  group: kb-sync-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  kb-sync:
+    name: Sync knowledge to RAG dataset
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate release tag format (FR-06)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::KB Sync 要求 tag 为 vMAJOR.MINOR.PATCH（三段非负整数），例如 v2.4.0。当前: $TAG。请改打合规 tag，或改用 Actions「Run workflow」手工同步（不校验 tag）。"
+            exit 1
+          fi
+
+      - name: Check required Variables / Secrets
+        run: |
+          if [ -z "${{ vars.KB_SYNC_BASE_URL }}" ] || [ -z "${{ vars.KB_SYNC_DATASET_ID }}" ]; then
+            echo "::error::请在仓库 Variables 中配置 KB_SYNC_BASE_URL、KB_SYNC_DATASET_ID（可选 KB_SYNC_ROOTS）"
+            exit 1
+          fi
+        # Secret 是否为空不在此处打印；若未配置，下一步会因 401 失败。
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install httpx
+        run: python -m pip install --upgrade pip && pip install "httpx==0.25.2"
+
+      - name: Run kb-sync
+        env:
+          KB_SYNC_BASE_URL: ${{ vars.KB_SYNC_BASE_URL }}
+          KB_SYNC_DATASET_ID: ${{ vars.KB_SYNC_DATASET_ID }}
+          KB_SYNC_DATASET_MAP: ${{ vars.KB_SYNC_DATASET_MAP }}
+          KB_SYNC_MAX_RETRIES: ${{ vars.KB_SYNC_MAX_RETRIES }}
+          KB_SYNC_TOKEN: ${{ secrets.KB_SYNC_TOKEN }}
+          KB_SYNC_REPO_ROOT: ${{ github.workspace }}
+          KB_SYNC_ROOTS: ${{ vars.KB_SYNC_ROOTS }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+          GIT_COMMIT: ${{ github.sha }}
+        run: python enterprise-rag-v2/scripts/kb/kb_sync.py

@@ -1,0 +1,157 @@
+name: AI Workbench E2E
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ai-workbench-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  GANFY_E2E_EMAIL: ai-workbench-e2e-${{ github.run_id }}@example.com
+  GANFY_E2E_VISUAL_EMAIL: ai-workbench-e2e-visual-${{ github.run_id }}@example.com
+  GANFY_E2E_PASSWORD: E2ERegression123!
+  GANFY_E2E_VISUAL_PASSWORD: E2ERegression123!
+  DATABASE_URL: postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/test_db
+  REDIS_URL: redis://127.0.0.1:6379/0
+  CELERY_BROKER_URL: redis://127.0.0.1:6379/1
+  CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
+  QDRANT_URL: http://127.0.0.1:6333
+  QDRANT_VECTOR_SIZE: "512"
+  ENVIRONMENT: development
+  DEBUG: "true"
+  TESTING: "true"
+  JWT_SECRET: ai-workbench-e2e-jwt-secret-for-ci-only
+  CSRF_SECRET: ai-workbench-e2e-csrf-secret-for-ci-only
+  ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+  INTERNAL_API_KEYS: '["ai-workbench-e2e-internal-key"]'
+  INTERNAL_IP_WHITELIST: '["*"]'
+  # E2E 单轮会加载全站静态资源和多个 API 页面；生产默认限流不应阻断 CI。
+  RATE_LIMIT_PER_MINUTE: "10000"
+
+jobs:
+  browser-regression:
+    name: workbench browser regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      qdrant:
+        image: qdrant/qdrant:v1.12.4
+        ports:
+          - 6333:6333
+        # v1.12.4 镜像基于 debian:12-slim，未内置 curl/wget，
+        # 健康检查改用 bash 内置的 /dev/tcp 探测 6333 端口。
+        options: >-
+          --health-cmd "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: enterprise-rag-v2/requirements.txt
+
+      - name: Install backend dependencies
+        working-directory: enterprise-rag-v2
+        run: |
+          python -m pip install --upgrade pip
+          pip install -q -r requirements.txt
+
+      - name: Apply database migrations
+        working-directory: enterprise-rag-v2
+        run: alembic upgrade head
+
+      - name: Start API and worker
+        working-directory: enterprise-rag-v2
+        run: |
+          nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/ganfy-e2e-api.log 2>&1 &
+          nohup celery -A infrastructure.queue.celery_app worker -Q celery,documents_high,chat_async --pool=solo --loglevel=INFO > /tmp/ganfy-e2e-worker.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/health/live; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:8000/health/live
+
+      - name: Register browser regression account
+        working-directory: enterprise-rag-v2
+        run: |
+          curl -fsS -X POST http://127.0.0.1:8000/api/v1/auth/register \
+            -H 'Content-Type: application/json' \
+            --data "{\"email\":\"${GANFY_E2E_EMAIL}\",\"name\":\"AI Workbench E2E\",\"password\":\"${GANFY_E2E_PASSWORD}\"}"
+          curl -fsS -X POST http://127.0.0.1:8000/api/v1/auth/register \
+            -H 'Content-Type: application/json' \
+            --data "{\"email\":\"${GANFY_E2E_VISUAL_EMAIL}\",\"name\":\"AI Workbench Visual E2E\",\"password\":\"${GANFY_E2E_VISUAL_PASSWORD}\"}"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: enterprise-rag-v2/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: enterprise-rag-v2/frontend
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: enterprise-rag-v2/frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Install CJK fonts for visual regression
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+          fc-match 'Noto Sans CJK SC'
+
+      - name: Verify frontend type-check and build
+        working-directory: enterprise-rag-v2/frontend
+        run: |
+          npm run type-check
+          npm run build
+
+      - name: Run workbench browser regression
+        working-directory: enterprise-rag-v2/frontend
+        env:
+          GANFY_E2E_RESEARCH_RUN: "1"
+          GANFY_E2E_PORT: "3000"
+          VITE_DEV_API: http://127.0.0.1:8000
+        run: npm run test:e2e -- tests/e2e --reporter=line
+
+      - name: Upload browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-workbench-e2e-diagnostics
+          path: |
+            enterprise-rag-v2/frontend/test-results/
+            /tmp/ganfy-e2e-api.log
+            /tmp/ganfy-e2e-worker.log
+          if-no-files-found: ignore

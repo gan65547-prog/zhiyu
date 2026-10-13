@@ -1,0 +1,31 @@
+services:
+  # 本地开发/验收覆盖层：使用当前工作树代码，避免旧镜像遗漏最新迁移或页面产物。
+  web:
+    environment:
+      # 浏览器回归会加载大量静态资源并在单轮内跨越多个页面；提高本地验收专用限流阈值，
+      # 不改变基础 compose/生产默认值，避免把测试流量误判为攻击。
+      RATE_LIMIT_PER_MINUTE: "10000"
+    volumes:
+      - ./api:/app/api:ro
+      - ./apps:/app/apps:ro
+      - ./core:/app/core:ro
+      - ./infrastructure:/app/infrastructure:ro
+      - ./services:/app/services:ro
+      - ./alembic:/app/alembic:ro
+      - ./main.py:/app/main.py:ro
+      - ./frontend/dist:/app/frontend/dist:ro
+      - ./runtime:/app/runtime
+      - ./runtime/uploads:/app/uploads
+      - ./shared:/app/shared
+  worker:
+    volumes:
+      - ./api:/app/api:ro
+      - ./apps:/app/apps:ro
+      - ./core:/app/core:ro
+      - ./infrastructure:/app/infrastructure:ro
+      - ./services:/app/services:ro
+      - ./alembic:/app/alembic:ro
+      - ./main.py:/app/main.py:ro
+      - ./runtime:/app/runtime
+      - ./runtime/uploads:/app/uploads
+      - ./shared:/app/shared

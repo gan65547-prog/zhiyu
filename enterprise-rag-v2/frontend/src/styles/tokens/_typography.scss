@@ -1,0 +1,54 @@
+// ============================================
+// Typography Tokens - 字体设计令牌
+// ============================================
+
+// Font Families - 字体家族
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                   'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
+                   'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+                   'Noto Color Emoji';
+$font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono',
+                   Consolas, 'Courier New', monospace;
+
+// Font Sizes - 字体大小 (px)
+$font-size-xs: 12px;      // 辅助文字
+$font-size-sm: 14px;      // 小号文字
+$font-size-base: 16px;    // 基础文字
+$font-size-lg: 18px;      // 大号文字
+$font-size-xl: 20px;      // 特大文字
+$font-size-2xl: 24px;     // 标题3
+$font-size-3xl: 30px;     // 标题2
+$font-size-4xl: 36px;     // 标题1
+
+// Font Weights - 字重
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Line Heights - 行高
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+$line-height-loose: 2;
+
+// Typography Scale Map
+$font-sizes: (
+  'xs': $font-size-xs,
+  'sm': $font-size-sm,
+  'base': $font-size-base,
+  'lg': $font-size-lg,
+  'xl': $font-size-xl,
+  '2xl': $font-size-2xl,
+  '3xl': $font-size-3xl,
+  '4xl': $font-size-4xl
+);
+
+$font-weights: (
+  'light': $font-weight-light,
+  'normal': $font-weight-normal,
+  'medium': $font-weight-medium,
+  'semibold': $font-weight-semibold,
+  'bold': $font-weight-bold
+);

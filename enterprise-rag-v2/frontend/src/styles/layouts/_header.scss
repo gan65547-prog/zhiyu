@@ -1,0 +1,142 @@
+// ============================================
+// Header Layout - 顶栏布局样式
+// ============================================
+
+@use '../tokens/typography' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/transitions' as *;
+
+.app-header {
+  height: var(--header-height, 64px);
+  background-color: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 $spacing-6;
+  transition: $transition-base, $transition-background, $transition-color;
+  z-index: 10;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-4;
+
+    // Mobile menu toggle button
+    .menu-toggle {
+      display: none;
+      padding: $spacing-2;
+      cursor: pointer;
+      color: var(--el-text-color-primary);
+      transition: $transition-color;
+
+      &:hover {
+        color: var(--el-color-primary);
+      }
+
+      @media (max-width: 768px) {
+        display: block;
+        margin-right: $spacing-3;
+      }
+    }
+
+    .workspace-selector {
+      min-width: 200px;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+
+    .page-title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: var(--el-text-color-primary);
+      margin: 0;
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: $radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--el-text-color-secondary);
+      transition: $transition-color, $transition-background;
+
+      &:hover {
+        background-color: var(--el-fill-color-light);
+        color: var(--el-text-color-primary);
+      }
+    }
+
+    .notification-bell {
+      width: 36px;
+      height: 36px;
+      border-radius: $radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--el-text-color-secondary);
+      position: relative;
+      transition: $transition-color, $transition-background;
+
+      &:hover {
+        background-color: var(--el-fill-color-light);
+        color: var(--el-text-color-primary);
+      }
+
+      .badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 8px;
+        height: 8px;
+        background-color: var(--el-color-danger);
+        border-radius: 50%;
+        border: 2px solid var(--el-bg-color);
+      }
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: $radius-full;
+      cursor: pointer;
+      transition: $transition-transform;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+// Dark mode header
+html.dark {
+  .app-header {
+    background-color: var(--el-bg-color);
+    border-bottom-color: var(--el-border-color);
+
+    .header-left,
+    .header-right {
+      .theme-toggle,
+      .notification-bell {
+        &:hover {
+          background-color: var(--el-fill-color-dark);
+          color: var(--el-text-color-primary);
+        }
+      }
+    }
+  }
+}

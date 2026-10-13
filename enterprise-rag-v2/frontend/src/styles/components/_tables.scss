@@ -1,0 +1,107 @@
+// ============================================
+// Table Component Overrides - 表格组件样式
+// ============================================
+
+@use '../tokens/typography' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/transitions' as *;
+
+.el-table {
+  border-radius: $radius-base;
+  overflow: hidden;
+  background-color: var(--el-bg-color);
+
+  // Table header
+  .el-table__header-wrapper {
+    .el-table__header {
+      th {
+        background-color: var(--el-fill-color-light);
+        font-weight: $font-weight-semibold;
+        color: var(--el-text-color-primary);
+        border-bottom: 1px solid var(--el-border-color-lighter);
+      }
+    }
+  }
+
+  // Table body
+  .el-table__body-wrapper {
+    .el-table__row {
+      transition: $transition-color, $transition-background;
+      background-color: var(--el-bg-color);
+      color: var(--el-text-color-regular);
+
+      &:hover {
+        background-color: var(--el-fill-color-light) !important;
+      }
+
+      td {
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        color: var(--el-text-color-regular);
+      }
+    }
+  }
+
+  // Striped table rows
+  &.el-table--striped {
+    .el-table__body {
+      tr.el-table__row--striped {
+        background-color: var(--el-fill-color-extra-light) !important;
+        td {
+          background-color: transparent !important;
+        }
+      }
+    }
+  }
+
+  // Empty state
+  .el-table__empty-block {
+    background-color: var(--el-bg-color);
+    color: var(--el-text-color-secondary);
+  }
+}
+
+// Dark mode table styles
+html.dark {
+  .el-table {
+    background-color: var(--el-bg-color-overlay);
+    color: var(--el-text-color-regular);
+
+    &::before {
+      background-color: var(--el-border-color);
+    }
+
+    .el-table__header-wrapper {
+      .el-table__header {
+        th {
+          background-color: var(--el-fill-color-darker);
+          color: var(--el-text-color-primary);
+          border-bottom-color: var(--el-border-color);
+        }
+      }
+    }
+
+    .el-table__body-wrapper {
+      .el-table__row {
+        background-color: var(--el-bg-color-overlay);
+        color: var(--el-text-color-regular);
+
+        &:hover {
+          background-color: var(--el-fill-color-dark) !important;
+        }
+
+        td {
+          border-bottom-color: var(--el-border-color);
+          color: var(--el-text-color-regular);
+        }
+      }
+    }
+
+    &.el-table--striped {
+      .el-table__body {
+        tr.el-table__row--striped {
+          background-color: var(--el-fill-color) !important;
+        }
+      }
+    }
+  }
+}

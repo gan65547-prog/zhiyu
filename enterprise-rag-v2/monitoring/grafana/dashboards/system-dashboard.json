@@ -1,0 +1,206 @@
+{
+  "title": "Enterprise RAG v2 - 系统监控",
+  "version": 1,
+  "description": "系统级监控：应用性能、业务指标、基础设施健康",
+  "panels": [
+    {
+      "title": "系统健康概览",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "up{job=\"enterprise-rag\"}",
+          "legendFormat": "{{ instance }}"
+        }
+      ],
+      "description": "应用实例运行状态"
+    },
+    {
+      "title": "HTTP 请求速率 (req/s)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[5m])",
+          "legendFormat": "{{ method }} {{ path }}"
+        }
+      ],
+      "description": "最近5分钟的平均HTTP请求速率"
+    },
+    {
+      "title": "HTTP 错误率 (5xx)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+          "legendFormat": "5xx %"
+        }
+      ],
+      "description": "5xx 错误占总请求的百分比",
+      "alert": {
+        "conditions": [
+          {
+            "evaluator": { "type": "gt", "params": [1] },
+            "query": { "params": ["A", "5m", "now"] },
+            "reducer": { "type": "avg" }
+          }
+        ]
+      }
+    },
+    {
+      "title": "P95 响应延迟 (ms)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000",
+          "legendFormat": "P95 {{ path }}"
+        }
+      ],
+      "description": "P95响应延迟，按路径分组"
+    },
+    {
+      "title": "活跃用户数",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(active_users_total)",
+          "legendFormat": "活跃用户"
+        }
+      ],
+      "description": "当前活跃用户数"
+    },
+    {
+      "title": "文档处理量",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "rate(documents_processed_total[5m])",
+          "legendFormat": "文档/秒"
+        }
+      ],
+      "description": "文档处理速率"
+    },
+    {
+      "title": "对话请求量",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "targets": [
+        {
+          "expr": "rate(chat_requests_total[5m])",
+          "legendFormat": "对话/秒"
+        }
+      ],
+      "description": "对话请求速率"
+    },
+    {
+      "title": "Token 消耗量",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "targets": [
+        {
+          "expr": "rate(tokens_used_total[5m])",
+          "legendFormat": "Token/秒"
+        }
+      ],
+      "description": "LLM Token 消耗速率"
+    },
+    {
+      "title": "CPU 使用率",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 32 },
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+          "legendFormat": "CPU %"
+        }
+      ],
+      "description": "进程 CPU 使用率"
+    },
+    {
+      "title": "内存使用量",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 32 },
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes / 1024 / 1024",
+          "legendFormat": "RSS MB"
+        }
+      ],
+      "description": "进程内存使用量 (MB)"
+    },
+    {
+      "title": "数据库连接数",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 32 },
+      "targets": [
+        {
+          "expr": "pg_stat_activity_count{datname=\"ragdb\"}",
+          "legendFormat": "连接数"
+        }
+      ],
+      "description": "PostgreSQL 活跃连接数"
+    },
+    {
+      "title": "Redis 内存使用",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 40 },
+      "targets": [
+        {
+          "expr": "redis_memory_used_bytes / 1024 / 1024",
+          "legendFormat": "Redis MB"
+        }
+      ],
+      "description": "Redis内存使用量 (MB)"
+    },
+    {
+      "title": "Qdrant 集合点数",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 40 },
+      "targets": [
+        {
+          "expr": "qdrant_collection_points_total",
+          "legendFormat": "{{ collection_name }}"
+        }
+      ],
+      "description": "Qdrant 向量库中的总点数"
+    },
+    {
+      "title": "API 配额使用率",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 40 },
+      "targets": [
+        {
+          "expr": "quota_usage_ratio",
+          "legendFormat": "{{ tenant_id }}"
+        }
+      ],
+      "description": "租户 API 配额使用率"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "type": "query",
+        "query": "label_values(up{job=\"enterprise-rag\"}, instance)",
+        "refresh": 1
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "部署事件",
+        "datasource": "Loki",
+        "expr": "{job=\"enterprise-rag\"} |= \"release\"",
+        "iconColor": "blue"
+      }
+    ]
+  },
+  "schemaVersion": 38,
+  "timezone": "browser"
+}

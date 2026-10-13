@@ -1,0 +1,9 @@
+# 知识库路径 CODEOWNERS 模板（取消注释并替换 @handle 后生效）
+# 说明：documents/design/项目开发资料与业务流程知识库及日志定位能力落地设计-v1.md §10.4
+#
+# 示例（请改为本组织真实 GitHub 用户名或团队）：
+# /documents/kb/                    @myorg/knowledge-owners
+# /documents/kb/architecture/       @myorg/platform-team
+# /documents/kb/business-process/   @myorg/product-team
+# /documents/kb/runbook/           @myorg/sre-team
+# /documents/kb/incidents/         @myorg/sre-team

@@ -1,0 +1,20 @@
+// ============================================
+// Border Radius Tokens - 圆角设计令牌
+// ============================================
+
+$radius-none: 0;
+$radius-sm: 4px;      // 小圆角 - 按钮、输入框
+$radius-base: 8px;    // 基础圆角 - 卡片
+$radius-lg: 12px;     // 大圆角 - 对话框
+$radius-xl: 16px;     // 特大圆角 - 特殊容器
+$radius-full: 9999px; // 完全圆角 - 头像、标签
+
+// Radius Map
+$radii: (
+  'none': $radius-none,
+  'sm': $radius-sm,
+  'base': $radius-base,
+  'lg': $radius-lg,
+  'xl': $radius-xl,
+  'full': $radius-full
+);

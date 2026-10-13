@@ -1,0 +1,105 @@
+// ============================================
+// Sidebar Layout - 侧边栏布局样式
+// ============================================
+
+@use '../tokens/typography' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/transitions' as *;
+
+.app-sidebar {
+  width: var(--sidebar-width, 240px);
+  background-color: var(--el-bg-color);
+  border-right: 1px solid var(--el-border-color-light);
+  display: flex;
+  flex-direction: column;
+  transition: $transition-base, $transition-background, $transition-color;
+  height: 100vh;
+
+  .sidebar-header {
+    padding: $spacing-4 $spacing-6;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    height: var(--header-height, 64px);
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      border-radius: $radius-sm;
+    }
+
+    .brand-name {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: var(--el-text-color-primary);
+    }
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-2 0;
+
+    // Custom scrollbar for sidebar
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--el-border-color-dark, #c0c4cc);
+      border-radius: 2px;
+
+      &:hover {
+        background: var(--el-text-color-placeholder, #9ca3af);
+      }
+    }
+  }
+
+  .sidebar-footer {
+    padding: $spacing-4 $spacing-6;
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+
+  // Responsive: mobile sidebar
+  @media (max-width: 768px) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: $shadow-xl;
+
+    &.is-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Dark mode sidebar
+html.dark {
+  .app-sidebar {
+    background-color: var(--el-bg-color);
+    border-right-color: var(--el-border-color);
+    box-shadow: none;
+
+    .sidebar-header {
+      border-bottom-color: var(--el-border-color);
+    }
+
+    .sidebar-footer {
+      border-top-color: var(--el-border-color);
+    }
+
+    @media (max-width: 768px) {
+      box-shadow: $shadow-dark-xl;
+    }
+  }
+}

@@ -1,0 +1,224 @@
+// ============================================
+// Navigation Component Overrides - 导航组件样式
+// ============================================
+
+@use '../tokens/typography' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/transitions' as *;
+
+// Menu component
+.el-menu {
+  border-right: none;
+  background-color: var(--el-bg-color);
+
+  .el-menu-item,
+  .el-sub-menu__title {
+    border-radius: $radius-sm;
+    margin: $spacing-1 $spacing-2;
+    transition: $transition-color, $transition-background;
+    color: var(--el-text-color-regular);
+    height: 48px;
+    line-height: 48px;
+
+    &:hover {
+      background-color: var(--el-fill-color-light);
+      color: var(--el-text-color-primary);
+    }
+
+    &.is-active {
+      background-color: var(--el-color-primary-light-9);
+      color: var(--el-color-primary);
+      font-weight: 500;
+    }
+
+    .el-icon {
+      font-size: 18px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  }
+
+  .el-menu-item-group__title {
+    padding: $spacing-2 $spacing-4;
+    font-size: 12px;
+    font-weight: $font-weight-semibold;
+    color: var(--el-text-color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  // Submenu styling
+  .el-sub-menu {
+    .el-menu {
+      background-color: var(--el-bg-color);
+    }
+  }
+}
+
+// Breadcrumb navigation
+.el-breadcrumb {
+  font-size: 14px;
+
+  .el-breadcrumb__inner {
+    color: var(--el-text-color-regular);
+
+    &.is-link:hover {
+      color: var(--el-color-primary);
+    }
+  }
+
+  .el-breadcrumb__separator {
+    color: var(--el-text-color-placeholder);
+    margin: 0 8px;
+  }
+}
+
+// Tabs component
+.el-tabs {
+  .el-tabs__header {
+    .el-tabs__nav-wrap::after {
+      background-color: var(--el-border-color-light);
+    }
+
+    .el-tabs__item {
+      color: var(--el-text-color-secondary);
+      font-size: 14px;
+      transition: $transition-color;
+
+      &:hover {
+        color: var(--el-color-primary);
+      }
+
+      &.is-active {
+        color: var(--el-color-primary);
+        font-weight: 500;
+      }
+    }
+
+    .el-tabs__active-bar {
+      background-color: var(--el-color-primary);
+    }
+  }
+}
+
+// Pagination component
+.el-pagination {
+  .el-pager li {
+    background-color: var(--el-bg-color);
+    color: var(--el-text-color-regular);
+    border-radius: $radius-sm;
+    min-width: 32px;
+    height: 32px;
+    line-height: 32px;
+
+    &:hover:not(.is-disabled):not(.is-active) {
+      color: var(--el-color-primary);
+    }
+
+    &.is-active {
+      background-color: var(--el-color-primary-light-9);
+      color: var(--el-color-primary);
+      font-weight: 500;
+    }
+  }
+
+  button {
+    background-color: var(--el-bg-color);
+    color: var(--el-text-color-regular);
+    border-radius: $radius-sm;
+
+    &:hover:not(:disabled) {
+      color: var(--el-color-primary);
+    }
+  }
+}
+
+// Dropdown menu
+.el-dropdown-menu {
+  background-color: var(--el-bg-color-overlay);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: $radius-base;
+  box-shadow: var(--el-box-shadow-dark, 0 4px 12px rgba(0, 0, 0, 0.15));
+  padding: $spacing-2 0;
+
+  .el-dropdown-menu__item {
+    color: var(--el-text-color-regular);
+    font-size: 14px;
+    line-height: 36px;
+    padding: 0 $spacing-3;
+    transition: $transition-color, $transition-background;
+
+    &:hover {
+      background-color: var(--el-color-primary-light-9);
+      color: var(--el-color-primary);
+    }
+
+    &.is-divided {
+      border-top: 1px solid var(--el-border-color-lighter);
+    }
+  }
+}
+
+// Dark mode navigation styles
+html.dark {
+  .el-menu {
+    background-color: var(--el-bg-color);
+
+    .el-menu-item,
+    .el-sub-menu__title {
+      color: var(--el-text-color-secondary);
+
+      &:hover {
+        background-color: var(--el-fill-color-dark);
+        color: var(--el-text-color-primary);
+      }
+
+      &.is-active {
+        background-color: rgba(100, 181, 246, 0.15);
+        color: var(--el-color-primary);
+      }
+    }
+
+    .el-menu-item-group__title {
+      color: var(--el-text-color-placeholder);
+    }
+  }
+
+  .el-dropdown-menu {
+    background-color: var(--el-bg-color-overlay);
+    border-color: var(--el-border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+    .el-dropdown-menu__item {
+      color: var(--el-text-color-regular);
+
+      &:hover {
+        background-color: rgba(100, 181, 246, 0.15);
+      }
+
+      &.is-divided {
+        border-top-color: var(--el-border-color);
+      }
+    }
+  }
+
+  .el-tabs {
+    .el-tabs__header {
+      .el-tabs__nav-wrap::after {
+        background-color: var(--el-border-color);
+      }
+    }
+  }
+
+  .el-pagination {
+    .el-pager li {
+      background-color: var(--el-fill-color-darker);
+      color: var(--el-text-color-secondary);
+
+      &.is-active {
+        background-color: rgba(100, 181, 246, 0.2);
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+# 保持向后兼容：默认安装开发环境全量依赖
+-r requirements/dev.txt

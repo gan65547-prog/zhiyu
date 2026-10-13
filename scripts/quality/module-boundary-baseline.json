@@ -1,0 +1,34 @@
+{
+  "reasons": {
+    "enterprise-rag-v2/api/deps.py::sqlalchemy": "legacy dependency injection session typing",
+    "enterprise-rag-v2/api/deps.py::infrastructure.database": "legacy database dependency provider",
+    "enterprise-rag-v2/api/routers/auth.py::sqlalchemy": "legacy route dependency typing",
+    "enterprise-rag-v2/api/routers/auth.py::infrastructure.database": "legacy auth configuration and API-key persistence path pending service extraction",
+    "enterprise-rag-v2/api/routers/datasets.py::sqlalchemy": "legacy admin query path pending service extraction",
+    "enterprise-rag-v2/api/routers/datasets.py::infrastructure.database": "legacy admin query path pending service extraction",
+    "enterprise-rag-v2/api/routers/chat.py::infrastructure.database": "legacy streaming persistence path pending service extraction",
+    "enterprise-rag-v2/api/routers/learning.py::sqlalchemy": "legacy learning query path pending service extraction",
+    "enterprise-rag-v2/api/routers/learning.py::infrastructure.database": "legacy learning query path pending service extraction",
+    "enterprise-rag-v2/api/routers/users.py::sqlalchemy": "legacy route dependency typing",
+    "enterprise-rag-v2/api/routers/documents.py::sqlalchemy": "legacy annotation query path pending service extraction",
+    "enterprise-rag-v2/api/routers/documents.py::infrastructure.database": "legacy annotation model path pending service extraction",
+    "enterprise-rag-v2/api/routers/content.py::infrastructure.database": "legacy metric sync query path pending service extraction",
+    "enterprise-rag-v2/services/impl/learning_diagnosis_service.py::api": "legacy SSE DTO import pending boundary extraction"
+  },
+  "violations": {
+    "enterprise-rag-v2/api/deps.py::sqlalchemy": 1,
+    "enterprise-rag-v2/api/deps.py::infrastructure.database": 2,
+    "enterprise-rag-v2/api/routers/auth.py::sqlalchemy": 2,
+    "enterprise-rag-v2/api/routers/auth.py::infrastructure.database": 1,
+    "enterprise-rag-v2/api/routers/chat.py::infrastructure.database": 6,
+    "enterprise-rag-v2/api/routers/datasets.py::sqlalchemy": 4,
+    "enterprise-rag-v2/api/routers/datasets.py::infrastructure.database": 5,
+    "enterprise-rag-v2/api/routers/learning.py::sqlalchemy": 2,
+    "enterprise-rag-v2/api/routers/learning.py::infrastructure.database": 1,
+    "enterprise-rag-v2/api/routers/users.py::sqlalchemy": 1,
+    "enterprise-rag-v2/services/impl/learning_diagnosis_service.py::api": 1,
+    "enterprise-rag-v2/api/routers/documents.py::sqlalchemy": 1,
+    "enterprise-rag-v2/api/routers/documents.py::infrastructure.database": 1,
+    "enterprise-rag-v2/api/routers/content.py::infrastructure.database": 1
+  }
+}

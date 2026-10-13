@@ -1,0 +1,23 @@
+{
+  "policy": "frontend baseline is measured legacy debt; new oversized Vue/TS files or functions block, and baseline items may grow only within review budget",
+  "files": {
+    "enterprise-rag-v2/frontend/src/views/UserListView.vue": {"max_lines": 817, "reason": "现有用户管理页面的筛选、分页和权限操作仍属于同一管理用例，后续按列表与编辑职责拆分"},
+    "enterprise-rag-v2/frontend/src/views/chat/ChatView.vue": {"max_lines": 1042, "reason": "历史对话工作区，消息流、引用展示和会话操作共同组成单一交互用例，后续拆分按组件职责进行"}
+  },
+  "functions": {},
+  "long_lines": {
+    "enterprise-rag-v2/frontend/src/components/common/FloatingAssistant.vue": {"max_count": 1, "max_length": 1791, "reason": "现有助手抽屉模板的紧凑布局，后续按表单、轮询和结果展示拆分"},
+    "enterprise-rag-v2/frontend/src/views/HomeView.vue": {"max_count": 9, "max_length": 1896, "reason": "现有总览页面的卡片布局模板债务，后续按仪表盘区块拆分"},
+    "enterprise-rag-v2/frontend/src/views/agents/AgentHomeView.vue": {"max_count": 1, "max_length": 1034, "reason": "历史 Agent 中心模板结构，先保留运行、审批、调度同一用例边界，后续只做职责明确的组件拆分"},
+    "enterprise-rag-v2/frontend/src/views/content/ContentHomeView.vue": {"max_count": 5, "max_length": 1300, "reason": "历史内容中心多步骤编辑/审核/发布页面，超长行属于格式债务，不代表允许新增业务职责"},
+    "enterprise-rag-v2/frontend/src/views/knowledge/KnowledgeHomeView.vue": {"max_count": 1, "max_length": 1588, "reason": "历史知识卡片审核交互，保留审核事务内聚边界，后续按展示与编辑职责整理"},
+    "enterprise-rag-v2/frontend/src/views/knowledge/KnowledgeNetworkView.vue": {"max_count": 1, "max_length": 1399, "reason": "历史关系网络展示交互，保留网络查询与视图状态边界，后续按职责整理"},
+    "enterprise-rag-v2/frontend/src/views/research/ResearchHomeView.vue": {"max_count": 1, "max_length": 1307, "reason": "历史研究工作区，项目/运行/报告审核共同组成研究用例，后续按稳定业务边界整理"},
+    "enterprise-rag-v2/frontend/src/views/discovery/DiscoveryHubView.vue": {"max_count": 15, "max_length": 3178, "reason": "现有发现中心模板布局债务，后续按发现卡片和筛选职责整理"},
+    "enterprise-rag-v2/frontend/src/views/document/DocumentReaderView.vue": {"max_count": 10, "max_length": 3846, "reason": "现有阅读器模板布局债务，后续按正文、标注和侧栏职责整理"},
+    "enterprise-rag-v2/frontend/src/views/insights/InsightDetailView.vue": {"max_count": 5, "max_length": 4863, "reason": "现有洞察详情模板布局债务，后续按证据、结论和操作职责整理"},
+    "enterprise-rag-v2/frontend/src/views/platform/PlatformDataView.vue": {"max_count": 24, "max_length": 3983, "reason": "现有平台数据模板布局债务，后续按指标、趋势和筛选职责整理"},
+    "enterprise-rag-v2/frontend/src/views/workbench/RunArchiveView.vue": {"max_count": 3, "max_length": 2630, "reason": "现有运行档案模板布局债务，后续按筛选、列表和详情职责整理"},
+    "enterprise-rag-v2/frontend/src/views/workbench/WorkbenchView.vue": {"max_count": 2, "max_length": 1860, "reason": "历史工作台总览状态聚合，保持总览用例内聚，禁止继续压缩新增逻辑到单行"}
+  }
+}

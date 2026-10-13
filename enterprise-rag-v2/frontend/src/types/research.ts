@@ -1,0 +1,8 @@
+export interface ResearchQuestion { question: string; sort_order: number }
+export interface ResearchProject { id: string; tenant_id: string; workspace_id: string; created_by: string; name: string; description?: string | null; status: string; questions: ResearchQuestion[]; sample_count: number; created_at: string; updated_at: string }
+export interface ResearchRun { id: string; project_id: string; status: string; progress: number; current_stage?: string | null; error_message?: string | null; report_id?: string | null; created_at: string; updated_at: string }
+export interface ResearchProjectListResponse { items: ResearchProject[]; total: number; page: number; page_size: number }
+export interface ResearchRunListResponse { items: ResearchRun[]; total: number; page: number; page_size: number }
+export interface ResearchReport { id: string; run_id: string; version: number; content_markdown: string; content_json: Record<string, unknown>; model_name?: string | null; prompt_version?: string | null; citation_completeness: number; review_status: string; published_dataset_id?: string | null; published_document_id?: string | null; published_knowledge_item_id?: string | null; created_at: string; updated_at: string }
+export interface ResearchEvidence { id: string; run_id: string; source_id: string; quote: string; locator?: string | null; source_title?: string | null; source_uri?: string | null; created_at: string }
+export interface ResearchFinding { id: string; run_id: string; claim: string; claim_type: string; confidence: number; evidence_ids: string[]; needs_review: boolean; review_status: string; created_at: string }

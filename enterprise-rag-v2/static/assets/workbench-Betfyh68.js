@@ -1,0 +1,1 @@
+import{aM as r}from"./index-BunSYBHn.js";const c={search:(s,a,e=20)=>r.get("/api/v1/workbench/search",{params:{workspace_id:s,q:a,limit:e}}),listTasks:(s,a=100,e=!1)=>r.get("/api/v1/workbench/tasks",{params:{workspace_id:s,limit:a,include_history:e}})};export{c as w};

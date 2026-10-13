@@ -1,0 +1,44 @@
+// ============================================
+// Transition Tokens - 过渡动画设计令牌
+// ============================================
+
+// Transition Durations - 动画时长
+$transition-duration-fast: 150ms;
+$transition-duration-base: 200ms;
+$transition-duration-slow: 300ms;
+
+// Transition Timing Functions - 缓动函数
+$transition-timing-ease: ease;
+$transition-timing-ease-in: ease-in;
+$transition-timing-ease-out: ease-out;
+$transition-timing-ease-in-out: ease-in-out;
+
+// Common Transition Combinations - 常用过渡组合
+$transition-base: all $transition-duration-base $transition-timing-ease-in-out;
+
+$transition-color: color $transition-duration-fast $transition-timing-ease-in-out,
+                   background-color $transition-duration-fast $transition-timing-ease-in-out,
+                   border-color $transition-duration-fast $transition-timing-ease-in-out;
+
+$transition-background: background-color $transition-duration-base $transition-timing-ease-in-out;
+
+$transition-transform: transform $transition-duration-base $transition-timing-ease-out;
+
+$transition-opacity: opacity $transition-duration-base $transition-timing-ease-in-out;
+
+$transition-shadow: box-shadow $transition-duration-base $transition-timing-ease-in-out;
+
+// Duration Map
+$durations: (
+  'fast': $transition-duration-fast,
+  'base': $transition-duration-base,
+  'slow': $transition-duration-slow
+);
+
+// Timing Map
+$timings: (
+  'ease': $transition-timing-ease,
+  'ease-in': $transition-timing-ease-in,
+  'ease-out': $transition-timing-ease-out,
+  'ease-in-out': $transition-timing-ease-in-out
+);

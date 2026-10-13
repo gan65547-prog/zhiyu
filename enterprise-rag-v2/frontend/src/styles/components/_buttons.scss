@@ -1,0 +1,77 @@
+@use '../tokens/colors' as *;
+@use '../tokens/typography' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/transitions' as *;
+
+// ============================================
+// Button Component Overrides - 按钮组件样式
+// ============================================
+
+.el-button {
+  font-weight: $font-weight-medium;
+  border-radius: $radius-sm;
+  transition: $transition-color, $transition-transform;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  // Primary button enhancement
+  &--primary {
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      box-shadow: $shadow-md;
+      border-color: var(--el-color-primary-dark-2);
+    }
+  }
+
+  // Text button optimization
+  &--text {
+    &:hover {
+      background-color: var(--el-fill-color-light);
+      color: var(--el-color-primary);
+    }
+  }
+
+  // Link button style
+  &--default {
+    &:hover {
+      border-color: var(--el-color-primary);
+      color: var(--el-color-primary);
+    }
+  }
+}
+
+// Dark mode specific button styles
+html.dark {
+  .el-button {
+    &--primary {
+      background-color: var(--el-color-primary);
+      border-color: var(--el-color-primary);
+
+      &:hover,
+      &:focus {
+        background-color: var(--el-color-primary-light-3);
+        border-color: var(--el-color-primary-light-3);
+        color: #fff;
+      }
+    }
+
+    &--default {
+      background-color: var(--el-bg-color);
+      border-color: var(--el-border-color);
+      color: var(--el-text-color-primary);
+
+      &:hover {
+        border-color: var(--el-color-primary-light-3);
+        color: var(--el-color-primary);
+      }
+    }
+  }
+}

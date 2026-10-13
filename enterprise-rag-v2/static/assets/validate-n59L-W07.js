@@ -1,0 +1,1 @@
+const r=t=>!t||typeof t!="string"?!1:(t=t.trim(),/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(t)),s=t=>t.length>=8,a=t=>t.length<8?{valid:!1,message:"密码长度至少8位"}:{valid:!0,message:""};export{r as a,s as b,a as v};

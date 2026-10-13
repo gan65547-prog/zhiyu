@@ -1,0 +1,80 @@
+// ============================================
+// Color Tokens - 颜色设计令牌
+// ============================================
+
+// Primary Colors - 品牌主色（参考产品的柔和紫色工作台风格）
+$color-primary-50: #f5f0ff;
+$color-primary-100: #ebe2ff;
+$color-primary-200: #d8c7ff;
+$color-primary-300: #bea1ff;
+$color-primary-400: #9a6cff;
+$color-primary-500: #7441e8;
+$color-primary-600: #6330d1;
+$color-primary-700: #5123af;
+$color-primary-800: #421d8e;
+$color-primary-900: #301568;
+
+// Functional Colors - 功能色
+$color-success: #52c41a;
+$color-success-light: #95de64;
+$color-success-dark: #389e0d;
+
+$color-warning: #faad14;
+$color-warning-light: #ffc53d;
+$color-warning-dark: #d48806;
+
+$color-error: #f5222d;
+$color-error-light: #ff4d4f;
+$color-error-dark: #cf1322;
+
+$color-info: #1890ff;
+$color-info-light: #40a9ff;
+$color-info-dark: #096dd9;
+
+// Neutral Colors - 中性色 (亮色主题)
+$color-text-primary: #1f2937;
+$color-text-secondary: #6b7280;
+$color-text-tertiary: #9ca3af;
+$color-text-disabled: #d1d5db;
+
+$color-bg-primary: #ffffff;
+$color-bg-secondary: #f7f7fb;
+$color-bg-tertiary: #f1f0f6;
+$color-bg-elevated: #ffffff;
+
+$color-border-primary: #e5e7eb;
+$color-border-secondary: #f3f4f6;
+
+// Dark Theme Colors - 暗色主题
+$color-dark-text-primary: #f9fafb;
+$color-dark-text-secondary: #d1d5db;
+$color-dark-text-tertiary: #9ca3af;
+$color-dark-text-disabled: #6b7280;
+
+$color-dark-bg-primary: #111827;
+$color-dark-bg-secondary: #1f2937;
+$color-dark-bg-tertiary: #374151;
+$color-dark-bg-elevated: #1f2937;
+
+$color-dark-border-primary: #374151;
+$color-dark-border-secondary: #4b5563;
+
+// Module Colors - 模块主题色
+$color-module-dataset: #8b5cf6;    // 知识库模块 - 紫色
+$color-module-chat: #10b981;       // 对话模块 - 绿色
+$color-module-workspace: #f59e0b;  // 工作空间模块 - 橙色
+$color-module-admin: #ef4444;      // 管理模块 - 红色
+
+// Semantic Color Maps (for easy reference)
+$colors-primary: (
+  '50': $color-primary-50,
+  '100': $color-primary-100,
+  '200': $color-primary-200,
+  '300': $color-primary-300,
+  '400': $color-primary-400,
+  '500': $color-primary-500,
+  '600': $color-primary-600,
+  '700': $color-primary-700,
+  '800': $color-primary-800,
+  '900': $color-primary-900
+);

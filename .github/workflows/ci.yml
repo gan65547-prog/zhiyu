@@ -1,0 +1,127 @@
+# 单仓库根目录工作流（路径：ganfy/）。若仅推送 enterprise-rag-v2 子仓库，请使用其中的 .github/workflows/ci-cd.yml。
+name: CI
+
+on:
+  push:
+    branches: [main, dev, master]
+  pull_request:
+    branches: [main, dev, master]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  governance:
+    name: governance (profile and documentation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Run governance gates
+        run: bash scripts/quality/run-quality-gates.sh --ci
+
+  enterprise-rag-v2:
+    name: enterprise-rag-v2 (tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: enterprise-rag-v2
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: enterprise-rag-v2/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -q -r requirements.txt
+      - name: Compile service sources
+        run: python -m compileall -q api services core infrastructure
+      - name: Run tests
+        run: python -m pytest tests -q --tb=short
+        env:
+          TESTING: "true"
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: test-secret-key-for-testing-only
+          INTERNAL_API_KEYS: '["ci-test-internal-key"]'
+          INTERNAL_IP_WHITELIST: '["*"]'
+
+  enterprise-rag-v2-frontend:
+    name: enterprise-rag-v2-frontend (type-check and build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: enterprise-rag-v2/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: enterprise-rag-v2/frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Check workbench lint
+        run: npm run lint:workbench
+      - name: Check frontend structure
+        working-directory: .
+        run: python3 scripts/quality/check-frontend-structure.py --root enterprise-rag-v2/frontend/src --repo-root . --baseline scripts/quality/frontend-quality-baseline.json
+      - name: Type check
+        run: npm run type-check
+      - name: Production build
+        run: npm run build
+
+  ops-center:
+    name: ops-center (tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ops-center
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: ops-center/requirements-dev.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -q -r requirements-dev.txt
+      - name: Run tests
+        run: python -m pytest tests -q --tb=short
+
+  # 使用内网自托管 Runner 时，可复制 enterprise-rag-v2 job，
+  # 将 runs-on: ubuntu-latest 改为 runs-on: [self-hosted, linux] 并配置对应 labels。

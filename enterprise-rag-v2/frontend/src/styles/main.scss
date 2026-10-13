@@ -1,0 +1,208 @@
+// ============================================
+// Main Stylesheet - 主样式入口文件
+// ============================================
+// Import order matters! Follow this sequence:
+// 1. Design Tokens (variables for use in all files)
+// 2. Theme Definitions (CSS variables)
+// 3. Base Styles (reset, global, utilities)
+// 4. Component Overrides (Element Plus customization)
+// 5. Layout Styles (sidebar, header, content)
+
+// 1. Design Tokens - 设计令牌
+@use './tokens/colors' as *;
+@use './tokens/typography' as *;
+@use './tokens/spacing' as *;
+@use './tokens/radius' as *;
+@use './tokens/shadows' as *;
+@use './tokens/transitions' as *;
+
+// 2. Theme Definitions - 主题定义
+@use './themes/light';
+@use './themes/dark';
+@use './themes/element-plus';
+
+// 3. Base Styles - 基础样式
+@use './base/reset';
+@use './base/global';
+@use './base/utilities';
+
+// 4. Component Styles - 组件样式覆盖
+@use './components/buttons';
+@use './components/cards';
+@use './components/forms';
+@use './components/tables';
+@use './components/dialogs';
+@use './components/navigation';
+
+// 5. Layout Styles - 布局样式
+@use './layouts/sidebar';
+@use './layouts/header';
+@use './layouts/content';
+
+// AI workbench visual language. The business views keep their own layout rules,
+// while this shared layer gives every page the same calm, editorial surface.
+.page-header {
+  .eyebrow {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--el-color-primary);
+  }
+
+  h1 {
+    font-family: Georgia, 'Times New Roman', 'Noto Serif SC', serif;
+    letter-spacing: -0.03em;
+    font-size: clamp(28px, 3vw, 42px);
+  }
+
+  .subtitle {
+    max-width: 680px;
+    line-height: 1.7;
+  }
+}
+
+.el-alert {
+  border-radius: 14px;
+  border: 1px solid var(--el-color-primary-light-7);
+}
+
+.el-card {
+  border-radius: 20px;
+  border-color: rgba(116, 65, 232, 0.12);
+  box-shadow: 0 14px 40px rgba(50, 35, 90, 0.06);
+
+  &:hover {
+    border-color: rgba(116, 65, 232, 0.25);
+    box-shadow: 0 18px 50px rgba(50, 35, 90, 0.1);
+  }
+}
+
+.el-table {
+  --el-table-header-bg-color: #faf8ff;
+  --el-table-row-hover-bg-color: #faf8ff;
+  --el-table-border-color: rgba(116, 65, 232, 0.1);
+}
+
+.el-button--primary {
+  background: linear-gradient(135deg, #7441e8, #6330d1);
+  border-color: transparent;
+}
+
+// Keep Element Plus semantic variants readable after applying the shared
+// purple gradient. Without these overrides, `plain`/`text`/`link` primary
+// buttons inherit the filled background while retaining purple text.
+.el-button--primary.is-plain {
+  color: #6330d1;
+  background: rgba(116, 65, 232, 0.08);
+  border-color: rgba(116, 65, 232, 0.28);
+
+  &:hover,
+  &:focus {
+    color: #5425bd;
+    background: rgba(116, 65, 232, 0.14);
+    border-color: rgba(116, 65, 232, 0.48);
+  }
+}
+
+.el-button--primary.is-text,
+.el-button--primary.is-link {
+  color: #6330d1;
+  background: transparent;
+  border-color: transparent;
+
+  &:hover,
+  &:focus {
+    color: #5425bd;
+    background: rgba(116, 65, 232, 0.08);
+  }
+}
+
+.el-input .el-input__wrapper.is-focus,
+.el-textarea .el-textarea__inner:focus,
+.el-select .el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 3px rgba(116, 65, 232, 0.12);
+}
+
+// Legacy workbench views: keep the same lavender/editorial language as the
+// newer dashboard pages. These selectors intentionally sit in the shared
+// stylesheet so old scoped views receive the same product-level treatment.
+.dataset-list-view,
+.profile-view,
+.workspace-list,
+.user-list {
+  .header h1,
+  .header h2,
+  > .el-card > .el-card__header,
+  .card-header {
+    color: var(--el-text-color-primary);
+  }
+
+  .header h1,
+  .header h2 {
+    font-family: Georgia, 'Times New Roman', 'Noto Serif SC', serif;
+    letter-spacing: -0.03em;
+  }
+
+  .el-card,
+  .dataset-card {
+    border-color: rgba(116, 65, 232, 0.14) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 14px 36px rgba(50, 35, 90, 0.06) !important;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(250, 248, 255, 0.94)) !important;
+  }
+
+  .el-table {
+    --el-table-header-bg-color: #faf8ff;
+    --el-table-row-hover-bg-color: #f8f4ff;
+  }
+}
+
+.dataset-list-view {
+  .header h1::before { content: none !important; }
+  .card-header > .el-icon { color: var(--el-color-primary) !important; }
+  .dataset-card:hover { border-color: rgba(116, 65, 232, 0.42) !important; }
+}
+
+.chat-view {
+  border-color: rgba(116, 65, 232, 0.16) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+
+  .sidebar { background: #faf8ff !important; border-right-color: rgba(116, 65, 232, 0.14) !important; }
+  .conversation-item.active { background: #f0eaff !important; border-left-color: var(--el-color-primary) !important; }
+  .conversation-item:hover { background: #f8f4ff !important; }
+  .chat-container { background: #fcfbff !important; }
+  .chat-header { background: rgba(255, 255, 255, 0.96) !important; border-bottom-color: rgba(116, 65, 232, 0.12) !important; }
+  .message-wrapper.user .message-content { background: var(--el-color-primary) !important; }
+}
+
+.diagnosis-page {
+  background: #fcfbff !important;
+  .input-panel { background: rgba(255, 255, 255, 0.96) !important; border-right-color: rgba(116, 65, 232, 0.14) !important; }
+  .report-card, .exercise-card { border-radius: 16px !important; border-color: rgba(116, 65, 232, 0.14) !important; box-shadow: 0 12px 30px rgba(50, 35, 90, 0.06) !important; }
+  .stage-item.active { color: var(--el-color-primary) !important; .stage-dot { background: var(--el-color-primary) !important; } }
+  .stage-item.done { color: #6b4bc6 !important; .stage-dot { background: #6b4bc6 !important; } }
+  .source-title, .typing-cursor { color: var(--el-color-primary) !important; }
+}
+
+// Reference workbench headings use a restrained Chinese editorial serif. The
+// previous Georgia-only stack falls back to the system sans font for Chinese
+// glyphs, which makes the product feel more like an admin console than the
+// intended personal workbench. Keep this scoped to product-facing surfaces;
+// admin tables and form labels retain the application UI font.
+@supports (font-family: "Songti SC") {
+  .home-view h1,
+  .workbench-view h1,
+  .insight-home h1,
+  .insight-detail h1,
+  .platform-data h1,
+  .run-archive h1,
+  .research-home h1,
+  .data-center h1,
+  .knowledge-home h1,
+  .network-view h1,
+  .discovery-hub h1,
+  .dashboard-hero h1 {
+    font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif !important;
+    font-weight: 700;
+  }
+}

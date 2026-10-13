@@ -1,0 +1,125 @@
+// ============================================
+// Dark Theme - 暗色主题
+// ============================================
+
+@use '../tokens/colors' as *;
+@use '../tokens/shadows' as *;
+
+html.dark {
+  // Primary Colors - 主色调 (暗色模式下稍微调亮)
+  --el-color-primary: #64b5f6;
+  --el-color-primary-light-3: #90caf9;
+  --el-color-primary-light-5: #bbdefb;
+  --el-color-primary-light-7: #e3f2fd;
+  --el-color-primary-light-8: #e8f4fd;
+  --el-color-primary-light-9: #f0f9ff;
+  --el-color-primary-dark-2: #42a5f5;
+
+  // Functional Colors - 功能色
+  --el-color-success: #73d13d;
+  --el-color-success-light-3: #95de64;
+  --el-color-success-light-5: #b7eb8f;
+  --el-color-success-light-7: #d9f7be;
+  --el-color-success-light-8: #eaffea;
+  --el-color-success-light-9: #f0fff0;
+  --el-color-success-dark-2: #52c41a;
+
+  --el-color-warning: #ffc53d;
+  --el-color-warning-light-3: #ffd666;
+  --el-color-warning-light-5: #ffe58f;
+  --el-color-warning-light-7: #fff1b8;
+  --el-color-warning-light-8: #fffbe6;
+  --el-color-warning-light-9: #fffff0;
+  --el-color-warning-dark-2: #faad14;
+
+  --el-color-danger: #ff7875;
+  --el-color-danger-light-3: #ff4d4f;
+  --el-color-danger-light-5: #ffa39e;
+  --el-color-danger-light-7: #ffccc7;
+  --el-color-danger-light-8: #fef0f0;
+  --el-color-danger-light-9: #fff1f0;
+  --el-color-danger-dark-2: #f5222d;
+
+  --el-color-info: #40a9ff;
+  --el-color-info-light-3: #69c0ff;
+  --el-color-info-light-5: #91d5ff;
+  --el-color-info-light-7: #bae7ff;
+  --el-color-info-light-8: #e6f7ff;
+  --el-color-info-light-9: #f0f9ff;
+  --el-color-info-dark-2: #1890ff;
+
+  // Background Colors - 背景色
+  --el-bg-color: #{$color-dark-bg-primary};
+  --el-bg-color-page: #0a0a0a;
+  --el-bg-color-overlay: #{$color-dark-bg-elevated};
+
+  // Text Colors - 文字色
+  --el-text-color-primary: #{$color-dark-text-primary};
+  --el-text-color-regular: #{$color-dark-text-secondary};
+  --el-text-color-secondary: #{$color-dark-text-tertiary};
+  --el-text-color-placeholder: #{$color-dark-text-disabled};
+  --el-text-color-disabled: #{$color-dark-text-disabled};
+
+  // Border Colors - 边框色
+  --el-border-color: #{$color-dark-border-primary};
+  --el-border-color-light: #{$color-dark-border-secondary};
+  --el-border-color-lighter: #4b5563;
+  --el-border-color-extra-light: #374151;
+  --el-border-color-dark: #1f2937;
+  --el-border-color-darker: #111827;
+
+  // Fill Colors - 填充色
+  --el-fill-color: #{$color-dark-bg-tertiary};
+  --el-fill-color-light: #4b5563;
+  --el-fill-color-lighter: #374151;
+  --el-fill-color-extra-light: #2d3748;
+  --el-fill-color-dark: #1f2937;
+  --el-fill-color-darker: #111827;
+  --el-fill-color-blank: transparent;
+
+  // Box Shadow - 阴影（暗色模式使用更高透明度）
+  --el-box-shadow: #{$shadow-dark-base};
+  --el-box-shadow-light: #{$shadow-dark-sm};
+  --el-box-shadow-lighter: 0 0 0 1px rgba(0, 0, 0, 0.3);
+  --el-box-shadow-dark: #{$shadow-dark-md};
+
+  // Module Colors - 模块主题色（暗色模式保持不变或微调）
+  --color-module-dataset: #a78bfa;    // 稍微提亮
+  --color-module-chat: #34d399;       // 稍微提亮
+  --color-module-workspace: #fbbf24;  // 稍微提亮
+  --color-module-admin: #f87171;      // 稍微提亮
+
+  // Overlay & Mask - 遮罩层
+  --el-overlay-color: rgba(0, 0, 0, 0.7);
+  --el-overlay-color-light: rgba(0, 0, 0, 0.5);
+  --el-overlay-color-lighter: rgba(0, 0, 0, 0.3);
+
+  // Mask - 遮罩
+  --el-mask-color: rgba(17, 23, 31, 0.9);
+  --el-mask-color-extra-light: rgba(17, 23, 31, 0.95);
+
+  // Disabled - 禁用状态
+  --el-disabled-bg-color: #1f2937;
+  --el-disabled-text-color: #4b5563;
+  --el-disabled-border-color: #374151;
+
+  // Scrollbar - 滚动条样式
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+
+    &:hover {
+      background: #6b7280;
+    }
+  }
+}

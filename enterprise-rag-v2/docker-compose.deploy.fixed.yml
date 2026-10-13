@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ragdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  web:
+    image: enterprise-rag-v2-web:staging-v2.1.0_202604221011_ff99a117
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/ragdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      DEBUG: "false"
+      JWT_SECRET: 08e21856e1756ab7ae7dcf50bb5f3619c7779cd2123553090eadd45ad7a07c97
+      CSRF_SECRET: 006c1c8fd1f4e222f5ae8bbd6a21e92b0b4f81f6fa6978e93eac8e36301bb969
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${PROJECT_DATA_DIR:-./data}/runtime:/app/runtime
+      - ${PROJECT_DATA_DIR:-./data}/shared:/app/shared
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    restart: unless-stopped
+
+  worker:
+    image: enterprise-rag-v2-worker:staging-v2.1.0_202604221011_ff99a117
+    command: celery -A infrastructure.queue.celery_app.celery_app worker -l INFO --concurrency=4 -Q documents_high,chat_async,celery
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/ragdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      JWT_SECRET: 30f741f0e858efdfa2e9a77822eb688068e5c90b34798bae5cd1b6dde4bd863f
+      CSRF_SECRET: df9f9d46c873b885fcff611398ee4c50beb06442b5aeddb57cc9961f8179959c
+    volumes:
+      - ${PROJECT_DATA_DIR:-./data}/runtime:/app/runtime
+      - ${PROJECT_DATA_DIR:-./data}/shared:/app/shared
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  beat:
+    image: enterprise-rag-v2-worker:staging-v2.1.0_202604221011_ff99a117
+    command: celery -A infrastructure.queue.celery_app.celery_app beat -l INFO
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/ragdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      JWT_SECRET: 30f741f0e858efdfa2e9a77822eb688068e5c90b34798bae5cd1b6dde4bd863f
+      CSRF_SECRET: df9f9d46c873b885fcff611398ee4c50beb06442b5aeddb57cc9961f8179959c
+    volumes:
+      - ${PROJECT_DATA_DIR:-./data}/runtime:/app/runtime
+      - ${PROJECT_DATA_DIR:-./data}/shared:/app/shared
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+
+networks:
+  default:
+    driver: bridge

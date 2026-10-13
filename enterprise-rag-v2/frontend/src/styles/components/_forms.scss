@@ -1,0 +1,130 @@
+// ============================================
+// Form Component Overrides - 表单组件样式
+// ============================================
+
+@use '../tokens/radius' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/transitions' as *;
+
+// Input component
+.el-input {
+  .el-input__wrapper {
+    border-radius: $radius-sm;
+    box-shadow: $shadow-sm;
+    transition: $transition-base, $transition-shadow;
+    background-color: var(--el-fill-color-blank);
+
+    &:hover {
+      box-shadow: $shadow-base;
+      border-color: var(--el-border-color);
+    }
+
+    &.is-focus {
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+      border-color: var(--el-color-primary);
+    }
+  }
+
+  .el-input__inner {
+    color: var(--el-text-color-primary);
+
+    &::placeholder {
+      color: var(--el-text-color-placeholder);
+    }
+  }
+}
+
+// Textarea component
+.el-textarea {
+  .el-textarea__inner {
+    border-radius: $radius-sm;
+    box-shadow: $shadow-sm;
+    transition: $transition-base, $transition-shadow;
+    background-color: var(--el-fill-color-blank);
+    color: var(--el-text-color-primary);
+
+    &:hover {
+      box-shadow: $shadow-base;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+      border-color: var(--el-color-primary);
+    }
+
+    &::placeholder {
+      color: var(--el-text-color-placeholder);
+    }
+  }
+}
+
+// Select component
+.el-select {
+  .el-select__wrapper {
+    border-radius: $radius-sm;
+    box-shadow: $shadow-sm;
+    transition: $transition-base, $transition-shadow;
+    background-color: var(--el-fill-color-blank);
+
+    &:hover {
+      box-shadow: $shadow-base;
+    }
+
+    &.is-focused {
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+      border-color: var(--el-color-primary);
+    }
+  }
+}
+
+// Form item label
+.el-form-item__label {
+  color: var(--el-text-color-regular) !important;
+  font-weight: 500;
+}
+
+// Dark mode form styles
+html.dark {
+  .el-input {
+    .el-input__wrapper {
+      background-color: var(--el-fill-color-darker);
+      border-color: var(--el-border-color);
+
+      &:hover {
+        border-color: var(--el-border-color-light);
+      }
+
+      &.is-focus {
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.25);
+      }
+    }
+  }
+
+  .el-textarea {
+    .el-textarea__inner {
+      background-color: var(--el-fill-color-darker);
+      border-color: var(--el-border-color);
+      color: var(--el-text-color-primary);
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.25);
+        border-color: var(--el-color-primary);
+      }
+    }
+  }
+
+  .el-select {
+    .el-select__wrapper {
+      background-color: var(--el-fill-color-darker);
+      border-color: var(--el-border-color);
+
+      &:hover {
+        border-color: var(--el-border-color-light);
+      }
+
+      &.is-focused {
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.25);
+      }
+    }
+  }
+}

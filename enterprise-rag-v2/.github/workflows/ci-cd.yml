@@ -1,0 +1,147 @@
+name: Enterprise RAG CI/CD
+
+# 在 monorepo（仓库根为 ganfy）时，请使用仓库根目录 .github/workflows/ci.yml；本文件在「仅 enterprise-rag-v2 为仓库根」时生效。
+on:
+  push:
+    branches: [main, dev, feature/core-enterprise, feature/ai-workbench-v0.2]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: enterprise-rag-v2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -q flake8 black isort mypy
+          pip install -q -r requirements.txt
+      - name: Run flake8
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Run black check
+        run: black --check .
+      - name: Run isort check
+        run: isort --check-only --diff .
+      - name: Security audit
+        run: |
+          pip install pip-audit
+          pip-audit --require-release-notes --strict -r requirements/runtime.txt
+
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: enterprise-rag-v2
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('enterprise-rag-v2/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -q -r requirements.txt
+      - name: Run database migrations
+        run: |
+          alembic upgrade head
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          TESTING: "true"
+      - name: Test migration rollback
+        run: |
+          alembic downgrade -1
+          alembic upgrade head
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          TESTING: "true"
+      - name: Run unit tests
+        run: python -m pytest tests/unit -q --cov=services --cov=core --cov-report=xml --tb=short
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: test-secret-key-for-testing-only
+          TESTING: "true"
+          CSRF_ENABLED: "false"
+          INTERNAL_API_KEYS: '["ci-test-internal-key"]'
+          INTERNAL_IP_WHITELIST: '["*"]'
+      - name: Run integration tests
+        run: python -m pytest tests/integration -v --tb=short
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: test-secret-key-for-testing-only
+          TESTING: "true"
+          CSRF_ENABLED: "false"
+          INTERNAL_API_KEYS: '["ci-test-internal-key"]'
+          INTERNAL_IP_WHITELIST: '["*"]'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: enterprise-rag-v2/frontend/package-lock.json
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run type-check
+          npm run build
+
+  release-dry-run:
+    name: Release Dry Run
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
+    defaults:
+      run:
+        working-directory: enterprise-rag-v2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show auto-generated version
+        run: bash scripts/release/release.sh --dry-run --skip-tag

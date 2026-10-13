@@ -1,0 +1,197 @@
+// ============================================
+// Element Plus Theme Customization
+// Element Plus 主题定制（通过CSS变量覆盖）
+// ============================================
+
+@use '../tokens/colors' as *;
+@use '../tokens/typography' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/radius' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/transitions' as *;
+
+// Element Plus 组件级别的额外定制
+
+.el-button {
+  font-weight: $font-weight-medium;
+  border-radius: $radius-sm;
+  transition: $transition-color, $transition-transform;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &--primary {
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      box-shadow: $shadow-md;
+    }
+  }
+
+  &--text {
+    &:hover {
+      background-color: var(--el-fill-color-light);
+    }
+  }
+}
+
+.el-card {
+  border-radius: $radius-base;
+  border: 1px solid var(--el-border-color-light);
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: var(--el-border-color);
+  }
+
+  .el-card__header {
+    padding: $spacing-4 $spacing-6;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    font-weight: $font-weight-semibold;
+  }
+
+  .el-card__body {
+    padding: $spacing-6;
+  }
+}
+
+.el-input {
+  .el-input__wrapper {
+    border-radius: $radius-sm;
+    box-shadow: $shadow-sm;
+    transition: $transition-base;
+
+    &:hover {
+      box-shadow: $shadow-base;
+    }
+
+    &.is-focus {
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+  }
+}
+
+.el-textarea {
+  .el-textarea__inner {
+    border-radius: $radius-sm;
+    box-shadow: $shadow-sm;
+    transition: $transition-base;
+
+    &:hover {
+      box-shadow: $shadow-base;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+  }
+}
+
+.el-select {
+  .el-select__wrapper {
+    border-radius: $radius-sm;
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      box-shadow: $shadow-base;
+    }
+
+    &.is-focused {
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+  }
+}
+
+.el-table {
+  border-radius: $radius-base;
+  overflow: hidden;
+
+  .el-table__header-wrapper {
+    .el-table__header th {
+      background-color: var(--el-fill-color-light);
+      font-weight: $font-weight-semibold;
+      color: var(--el-text-color-primary);
+    }
+  }
+
+  .el-table__body-wrapper {
+    .el-table__row {
+      transition: $transition-color;
+
+      &:hover {
+        background-color: var(--el-fill-color-lighter);
+      }
+    }
+  }
+
+  &.el-table--striped {
+    .el-table__body tr.el-table__row--striped {
+      background-color: var(--el-fill-color-extra-light);
+    }
+  }
+}
+
+.el-dialog {
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+
+  .el-dialog__header {
+    padding: $spacing-6;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+
+    .el-dialog__title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  .el-dialog__body {
+    padding: $spacing-6;
+  }
+
+  .el-dialog__footer {
+    padding: $spacing-4 $spacing-6;
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+}
+
+.el-overlay {
+  /* backdrop-filter removed — see _dialogs.scss */
+}
+
+.el-menu {
+  border-right: none;
+
+  .el-menu-item,
+  .el-sub-menu__title {
+    border-radius: $radius-sm;
+    margin: $spacing-1 $spacing-2;
+    transition: $transition-color;
+
+    &:hover {
+      background-color: var(--el-fill-color-light);
+    }
+
+    &.is-active {
+      background-color: var(--el-color-primary-light-9);
+      color: var(--el-color-primary);
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  .el-menu-item-group__title {
+    padding: $spacing-2 $spacing-4;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: var(--el-text-color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}

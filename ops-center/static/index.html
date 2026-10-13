@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ops-center 超级管理员控制台</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --radius: 10px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 24px rgba(15, 23, 42, 0.07);
+      --sidebar-w: 244px;
+    }
+    * { box-sizing: border-box; }
+    html { font-size: 16px; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+        "Microsoft YaHei", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      line-height: 1.55;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { max-width: min(1680px, 100%); margin: 0 auto; padding: 20px clamp(16px, 3vw, 28px) 28px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    /* 登录后控制台铺满：外层卡片去框，避免与内层白卡片叠两层 */
+    .card:has(#consolePanel:not(.hidden)) {
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+    }
+    .header {
+      padding: 20px clamp(20px, 3vw, 28px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(180deg, #fff 0%, #fafbfc 100%);
+    }
+    .title { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+    .sub { margin: 8px 0 0; color: var(--muted); font-size: 0.9375rem; line-height: 1.65; max-width: 62ch; }
+    .body { padding: 22px clamp(20px, 3vw, 28px) 28px; }
+    .hidden { display: none !important; }
+    .grid { display: grid; gap: 12px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(220px, 1fr)); }
+
+    label { font-size: 0.8125rem; color: var(--muted); display: block; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.02em; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #ffffff;
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 0.9375rem;
+      line-height: 1.45;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button {
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 9px 16px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+    button:hover { background: var(--primary-hover); }
+    button:active { transform: translateY(1px); }
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border-color: var(--border);
+      font-weight: 600;
+    }
+    button.secondary:hover { background: #f9fafb; }
+    button.warn {
+      background: #fff;
+      color: #92400e;
+      border-color: #d6d3d1;
+    }
+    button.warn:hover { background: #fafaf9; }
+    button.danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+    button.danger:hover { background: #fee2e2; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+
+    .status {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 14px;
+      max-width: min(520px, 100%);
+      line-height: 1.4;
+    }
+    .status.ok {
+      color: var(--text);
+      background: #f9fafb;
+      border-color: var(--border);
+      border-left: 3px solid #15803d;
+    }
+    .status.err {
+      color: var(--text);
+      background: #f9fafb;
+      border-color: var(--border);
+      border-left: 3px solid var(--danger);
+    }
+
+    .page-section > h3 { margin: 0 0 12px; font-size: 1rem; }
+    .hint { color: var(--muted); font-size: 0.875rem; margin: 4px 0 14px; line-height: 1.65; }
+    .err { color: #b91c1c; font-size: .86rem; min-height: 1.2em; margin-top: 8px; }
+
+    .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; min-width: 780px; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+    th { color: var(--muted); background: var(--panel-2); font-weight: 600; position: sticky; top: 0; font-size: 0.8125rem; letter-spacing: 0.03em; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr.selected { background: #eff6ff; box-shadow: inset 4px 0 0 0 var(--primary); }
+    tbody tr { transition: background-color .15s ease; }
+    .mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8125rem; }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+      gap: 20px;
+      align-items: start;
+      margin-top: 12px;
+    }
+    @media (max-width: 1024px) {
+      .split { grid-template-columns: 1fr; }
+    }
+    .split-side {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 8px;
+    }
+    .detail-head {
+      margin: 0 0 12px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .detail-empty {
+      color: var(--muted);
+      font-size: .86rem;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .kv { display: flex; flex-direction: column; gap: 0; }
+    .kv-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 38%) 1fr;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: .8125rem;
+    }
+    .kv-row:last-child { border-bottom: none; }
+    .kv-k { color: var(--muted); font-weight: 600; }
+    .kv-v { color: var(--text); word-break: break-word; }
+
+    .banner {
+      margin-top: 10px;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: .875rem;
+      border: 1px solid var(--border);
+      background: #fafafa;
+      border-left: 3px solid #9ca3af;
+      color: var(--text);
+    }
+    .banner.hidden { display: none; }
+    .banner.ok { background: #f9fafb; border-color: var(--border); border-left-color: #15803d; }
+    .banner.err { background: #f9fafb; border-color: var(--border); border-left-color: var(--danger); }
+    .banner strong { display: block; margin-bottom: 4px; font-size: .88rem; }
+
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: .8125rem;
+      font-weight: 500;
+    }
+
+    details.adv-json {
+      margin-top: 8px;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fff;
+    }
+    details.adv-json > summary {
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--muted);
+      user-select: none;
+    }
+    details.adv-json textarea { margin-top: 8px; }
+
+    .login { max-width: 440px; margin: 8px auto 0; }
+    .quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; margin-top: 8px; }
+    .quick-item {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 14px;
+      box-shadow: var(--shadow);
+    }
+    .quick-item .k { color: var(--muted); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; }
+    .quick-item .v { font-size: 1rem; margin-top: 6px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .quick-item .v.metric-good { color: #15803d; }
+    .quick-item .v.metric-warn { color: #92400e; }
+    .quick-item .v.metric-bad { color: var(--danger); }
+
+    .op-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      background: #fff;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+    .op-card h4 { margin: 0 0 10px; font-size: 0.9375rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .op-card .risk { color: var(--danger); font-size: 0.8125rem; margin: 0 0 12px; line-height: 1.55; }
+    .exec-strip {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      box-shadow: var(--shadow);
+    }
+    .exec-strip .hint { margin-top: 0; margin-bottom: 10px; }
+    .tenant-picked {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-soft);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.8125rem;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+    .wizard {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .wizard-title {
+      margin: 0 0 10px;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .step-pill {
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      color: var(--muted);
+      padding: 4px 10px;
+      font-size: .75rem;
+      font-weight: 500;
+    }
+
+    p.sub a { color: var(--primary); text-decoration: none; }
+    p.sub a:hover { text-decoration: underline; }
+    p.sub code { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; font-size: .85em; }
+    .row a { text-decoration: none; }
+
+    /* 控制台布局：侧栏 + 主区 */
+    .app-shell {
+      display: flex;
+      min-height: calc(100vh - 48px);
+      align-items: stretch;
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%);
+      border-right: 1px solid var(--border);
+      padding: 18px 0 24px;
+    }
+    .sidebar-brand {
+      padding: 0 20px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .sidebar-brand span { display: block; font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-top: 6px; letter-spacing: 0.02em; }
+    .nav-item {
+      display: block;
+      width: calc(100% - 20px);
+      margin: 3px 10px;
+      text-align: left;
+      padding: 11px 14px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.8); }
+    .nav-item.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+    }
+    .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px clamp(18px, 2.5vw, 26px);
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    }
+    .topbar h2 { margin: 0; font-size: 1.125rem; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .topbar-right .link { font-size: 0.8125rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+    .topbar-right .link:hover { text-decoration: underline; }
+    .main-scroll { padding: 20px clamp(16px, 2.5vw, 28px) 32px; flex: 1; overflow: auto; background: var(--bg); }
+    .page-section {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px 22px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .page-section h3 { margin: 0 0 12px; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.02em; }
+    .form-inline { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+    .form-inline .field { min-width: 160px; flex: 0 1 auto; }
+    .quick-form-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .quick-form-row.visible { display: block; }
+    .tenant-action-panel { padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+    .tenant-action-panel .action-block { margin-top: 14px; }
+    .tenant-action-panel .action-block-title {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    .tenant-action-panel .danger-zone {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px dashed #fecaca;
+    }
+    .main-scroll > #globalErr { margin-bottom: 4px; }
+    @media (max-width: 900px) {
+      .app-shell { flex-direction: column; min-height: auto; }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 14px 0 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div id="cardHeader" class="header">
+        <div>
+          <h1 class="title">ops-center 运维中心</h1>
+          <p class="sub">超级管理员控制面：租户与用量、运维操作与审计、运维账号。若已执行 <code>make console-build</code>，可使用 <a href="/console/" target="_blank" rel="noopener">Vue 控制台 /console/</a>。</p>
+        </div>
+      </div>
+
+      <div id="loginPanel" class="body login">
+        <div class="grid">
+          <div>
+            <label>用户名（超级管理员）</label>
+            <input id="loginUsername" type="text" value="admin" autocomplete="username" />
+          </div>
+          <div>
+            <label>密码</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" />
+          </div>
+          <div class="row">
+            <button id="btnLogin">登录</button>
+            <button id="btnTryDefault" class="secondary">填入默认账号</button>
+          </div>
+          <div class="hint">首次登录请使用部署时配置的运维管理员账号和密码。</div>
+          <div id="loginErr" class="err"></div>
+        </div>
+      </div>
+
+      <div id="consolePanel" class="hidden app-shell">
+        <aside class="sidebar">
+          <div class="sidebar-brand">运维中心<span>超级管理员</span></div>
+          <button type="button" class="nav-item active" data-tab="dashboard">概览</button>
+          <button type="button" class="nav-item" data-tab="tenants">租户管理</button>
+          <button type="button" class="nav-item" data-tab="operations">运维操作</button>
+          <button type="button" class="nav-item" data-tab="audit">审计日志</button>
+          <button type="button" class="nav-item" data-tab="users">运维用户</button>
+          <button type="button" class="nav-item" data-tab="tools">运维命令</button>
+        </aside>
+        <div class="main-col">
+          <header class="topbar">
+            <h2 id="pageTitle">概览</h2>
+            <div class="topbar-right">
+              <span id="topStatus" class="status">未登录</span>
+              <a class="link" href="/console/" target="_blank" rel="noopener">Vue 控制台</a>
+              <button type="button" id="btnLogout" class="danger">退出登录</button>
+            </div>
+          </header>
+          <div id="writeExecStrip" class="exec-strip hidden">
+            <p class="hint"><strong>写操作执行上下文</strong>（配额、重建索引、缓存失效等 POST 共用）</p>
+            <div class="grid grid-3">
+              <div><label>租户 ID（tenant_id）</label><input id="toolTenant" type="text" placeholder="可粘贴 UUID，或在租户列表点选后自动填入" /></div>
+              <div><label>X-Op-Id（幂等）</label><input id="toolOpId" type="text" placeholder="ops-ui-..." /></div>
+              <div><label>X-Operator</label><input id="toolOperator" type="text" value="super_admin_ui" /></div>
+            </div>
+            <div class="row" style="margin-top:8px;">
+              <button type="button" class="secondary" id="btnFillSelectedTenant">填入当前选中租户</button>
+              <button type="button" class="secondary" id="btnGenOpId">生成新 Op-Id</button>
+            </div>
+          </div>
+          <div class="main-scroll">
+            <div id="globalErr" class="err"></div>
+
+          <section id="tab-dashboard" class="page-section">
+            <p class="hint">登录态与上游连通性总览。</p>
+            <div class="quick-grid">
+              <div class="quick-item"><div class="k">当前用户</div><div class="v" id="dashUser">-</div></div>
+              <div class="quick-item"><div class="k">角色</div><div class="v" id="dashRoles">-</div></div>
+              <div class="quick-item"><div class="k">租户总数</div><div class="v" id="dashTenantCount">-</div></div>
+              <div class="quick-item"><div class="k">操作记录</div><div class="v" id="dashOpCount">-</div></div>
+              <div class="quick-item"><div class="k">业务上游</div><div class="v" id="dashUpstream">-</div></div>
+            </div>
+            <div class="row" style="margin-top:12px;">
+              <button id="btnDashRefresh">刷新概览</button>
+              <a href="/docs" target="_blank" rel="noopener"><button class="secondary" type="button">Swagger 文档</button></a>
+              <a href="/health/ready" target="_blank" rel="noopener"><button class="secondary" type="button">就绪检查</button></a>
+            </div>
+            <div class="split-side" style="margin-top:12px; position: static;">
+              <div class="detail-head">环境与健康摘要</div>
+              <p class="detail-empty">上方卡片为关键指标；以下为分页与上游探测摘要（不再展示整段 JSON）。</p>
+              <div id="dashKv" class="kv"></div>
+            </div>
+          </section>
+
+          <section id="tab-tenants" class="page-section hidden">
+            <p class="hint">先点击表格中的租户行选中，右侧会展示详情与可用操作。写操作需使用上方「写操作执行上下文」中的 <strong>tenant_id</strong>（点选行会自动填入）与幂等头。</p>
+            <div class="grid grid-3">
+              <div><label>关键词</label><input id="tenantKeyword" type="text" placeholder="租户名 / 联系邮箱" /></div>
+              <div><label>状态</label><input id="tenantStatus" type="text" placeholder="active / disabled" /></div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button id="btnLoadTenants">查询租户</button>
+              <button id="btnTenantUsage" class="secondary">刷新选中租户用量</button>
+            </div>
+            <div id="tenantSelectedHint" class="tenant-picked">当前未选中租户</div>
+            <div class="split">
+              <div>
+                <div class="table-wrap" style="margin-top:10px;">
+                  <table>
+                    <thead><tr><th>ID</th><th>名称</th><th>计划（历史字段）</th><th>状态</th><th>邮箱</th></tr></thead>
+                    <tbody id="tenantTable"></tbody>
+                  </table>
+                </div>
+              </div>
+              <aside class="split-side">
+                <div class="detail-head">租户信息</div>
+                <p id="tenantDetailHint" class="detail-empty">在左侧列表中点击一条租户，将在此处展示详情与配额/用量。</p>
+                <div id="tenantActionPanel" class="tenant-action-panel hidden">
+                  <div class="detail-head" style="margin-top:0; padding-top:0; border-top:none;">租户操作</div>
+                  <p class="hint" style="margin-top:0;"><strong>删除租户</strong>仅超级管理员可用。</p>
+                  <div id="tenantActionBanner" class="banner hidden"></div>
+                  <div class="action-block danger-zone">
+                    <div class="action-block-title">危险操作</div>
+                    <p class="hint" style="margin-top:0;">软删除租户（业务库标记删除），请谨慎操作。</p>
+                    <button type="button" id="btnDetailDelete" class="danger">删除租户</button>
+                  </div>
+                  <div class="row" style="margin-top:14px;">
+                    <button type="button" id="btnTenantGotoTools" class="secondary">运维命令（配额/重建索引）</button>
+                  </div>
+                </div>
+                <div id="tenantKv" class="kv"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="tab-operations" class="page-section hidden">
+            <p class="hint">按条件筛选运维操作记录，点击行查看详情。</p>
+            <div class="split">
+              <div>
+                <div class="grid grid-3">
+                  <div><label>tenant_id</label><input id="opTenantId" type="text" /></div>
+                  <div><label>action</label><input id="opAction" type="text" /></div>
+                  <div><label>status</label><input id="opStatus" type="text" /></div>
+                </div>
+                <div class="row" style="margin-top:10px;"><button id="btnLoadOps">查询操作</button></div>
+                <div class="table-wrap" style="margin-top:10px;">
+                  <table>
+                    <thead><tr><th>operation_id</th><th>action</th><th>status</th><th>tenant_id</th><th>created_at</th></tr></thead>
+                    <tbody id="opTable"></tbody>
+                  </table>
+                </div>
+              </div>
+              <aside class="split-side">
+                <div class="detail-head">操作详情</div>
+                <p id="opDetailHint" class="detail-empty">点击左侧表格中的记录，在此查看结构化字段（不展示整段 JSON）。</p>
+                <div id="opKv" class="kv"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="tab-audit" class="page-section hidden">
+            <p class="hint">按条件筛选审计日志，点击行查看字段摘要。</p>
+            <div class="split">
+              <div>
+                <div class="grid grid-3">
+                  <div><label>tenant_id</label><input id="auditTenant" type="text" /></div>
+                  <div><label>action</label><input id="auditAction" type="text" /></div>
+                  <div><label>status</label><input id="auditStatus" type="text" /></div>
+                </div>
+                <div class="row" style="margin-top:10px;"><button id="btnLoadAudit">查询审计</button></div>
+                <div class="table-wrap" style="margin-top:10px;">
+                  <table>
+                    <thead><tr><th>id</th><th>action</th><th>resource_type</th><th>status</th><th>created_at</th></tr></thead>
+                    <tbody id="auditTable"></tbody>
+                  </table>
+                </div>
+              </div>
+              <aside class="split-side">
+                <div class="detail-head">审计条目</div>
+                <p id="auditDetailHint" class="detail-empty">点击左侧表格中的记录查看字段摘要。</p>
+                <div id="auditKv" class="kv"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="tab-users" class="page-section hidden">
+            <p class="hint">运维账号与角色管理（需 super_admin）。</p>
+            <div class="row">
+              <button id="btnLoadUsers">刷新用户/角色</button>
+            </div>
+            <div class="grid grid-2" style="margin-top:10px;">
+              <div>
+                <label>创建用户</label>
+                <input id="newUsername" type="text" placeholder="用户名" />
+                <input id="newPassword" type="password" placeholder="初始密码" style="margin-top:8px;" />
+                <label style="margin-top:8px;">角色（逗号分隔，如 super_admin,tenant_ops）</label>
+                <input id="newRoles" type="text" placeholder="read_only_auditor" />
+                <div class="row" style="margin-top:8px;"><button id="btnCreateUser">创建用户</button></div>
+              </div>
+              <div>
+                <label>更新用户状态/密码</label>
+                <input id="updUsername" type="text" placeholder="目标用户名" />
+                <input id="updPassword" type="password" placeholder="新密码(可空)" style="margin-top:8px;" />
+                <label style="margin-top:8px;">启用状态</label>
+                <select id="updActive"><option value="">不修改</option><option value="true">启用</option><option value="false">禁用</option></select>
+                <div class="row" style="margin-top:8px;"><button id="btnUpdateUser" class="warn">更新用户</button><button id="btnDeleteUser" class="danger">删除用户</button></div>
+              </div>
+            </div>
+            <div class="hint">分配角色：输入用户名与角色列表后点击“分配角色”。</div>
+            <div class="row">
+              <input id="roleUsername" type="text" placeholder="用户名" style="max-width:220px;" />
+              <input id="roleList" type="text" placeholder="super_admin,tenant_ops" style="max-width:320px;" />
+              <button id="btnAssignRoles" class="secondary">分配角色</button>
+            </div>
+            <div class="table-wrap" style="margin-top:10px;">
+              <table>
+                <thead><tr><th>id</th><th>username</th><th>is_active</th><th>roles</th></tr></thead>
+                <tbody id="userTable"></tbody>
+              </table>
+            </div>
+            <div class="detail-head" style="margin-top:12px;">系统角色</div>
+            <p class="detail-empty">以下为当前系统支持的运维角色标识（刷新用户列表时同步更新）。</p>
+            <div id="rolesChips" class="chip-row"></div>
+          </section>
+
+          <section id="tab-tools" class="page-section hidden">
+            <p class="hint">配额、重建索引、缓存失效。请先在上栏填写 <strong>tenant_id</strong>（重建索引必填）与幂等头。更复杂组合请用 <a href="/docs" target="_blank" rel="noopener">Swagger</a>。</p>
+            <div id="toolBanner" class="banner hidden"></div>
+            <div class="detail-head" style="margin-top:8px;">最近一次命令摘要</div>
+            <div id="toolKv" class="kv"></div>
+
+            <div class="op-card">
+              <h4>配额调整</h4>
+              <p class="hint">对应业务侧 internal admin 配额接口。</p>
+              <div class="grid grid-3">
+                <div><label>配额类型</label>
+                  <select id="toolQuotaType">
+                    <option value="documents">documents</option>
+                    <option value="max_users">max_users</option>
+                    <option value="max_datasets">max_datasets</option>
+                    <option value="max_workspaces">max_workspaces</option>
+                    <option value="max_api_calls_per_day">max_api_calls_per_day</option>
+                  </select>
+                </div>
+                <div><label>数值</label><input id="toolQuotaValue" type="number" value="200" min="0" /></div>
+                <div><label>原因</label><input id="toolQuotaReason" type="text" value="ops-center-ui" /></div>
+              </div>
+              <div class="row" style="margin-top:8px;"><button id="btnQuotaUpdate">执行配额更新</button></div>
+            </div>
+            <div class="op-card">
+              <h4>文档重建索引（异步）</h4>
+              <p class="risk">可能长时间占用 worker；未填 dataset/document 时按租户范围处理。</p>
+              <div class="grid grid-3">
+                <div><label>tenant_id</label><input id="toolReindexTenant" type="text" placeholder="可与上栏同步，或在此填写" /></div>
+                <div><label>dataset_id（可选）</label><input id="toolReindexDataset" type="text" placeholder="留空" /></div>
+                <div><label>document_id（可选）</label><input id="toolReindexDocument" type="text" placeholder="留空" /></div>
+              </div>
+              <div class="row" style="margin-top:8px;"><button id="btnReindex" class="warn">派发重建索引</button></div>
+            </div>
+            <div class="op-card">
+              <h4>业务 Redis 缓存失效</h4>
+              <p class="hint">scopes 为英文标识，多个用英文逗号分隔；租户级可填 tenant_id，否则留空。</p>
+              <div class="grid grid-2">
+                <div><label>scopes</label><input id="toolCacheScopes" type="text" value="quota_overrides" placeholder="quota_overrides,cache_keys" /></div>
+                <div><label>tenant_id（可选）</label><input id="toolCacheTenant" type="text" placeholder="留空表示不按租户过滤" /></div>
+              </div>
+              <div class="row" style="margin-top:8px;"><button id="btnCacheInvalidate" class="secondary">执行缓存失效</button></div>
+            </div>
+          </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const TOKEN_KEY = "ops_center_token";
+  const loginPanel = document.getElementById("loginPanel");
+  const consolePanel = document.getElementById("consolePanel");
+  const topStatus = document.getElementById("topStatus");
+  const loginErr = document.getElementById("loginErr");
+  const globalErr = document.getElementById("globalErr");
+  const cardHeader = document.getElementById("cardHeader");
+  const pageTitleEl = document.getElementById("pageTitle");
+
+  let currentUser = null;
+  let selectedTenantId = "";
+
+  const PAGE_TITLES = {
+    dashboard: "概览",
+    tenants: "租户管理",
+    operations: "运维操作",
+    audit: "审计日志",
+    users: "运维用户",
+    tools: "运维命令",
+  };
+
+  const escHtml = (v) =>
+    String(v ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+
+  function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
+  function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+  function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+  function headers(extra = {}) {
+    const h = { "Accept": "application/json", ...extra };
+    const token = getToken();
+    if (token) h.Authorization = `Bearer ${token}`;
+    return h;
+  }
+
+  function parseJwt(token) {
+    try { return JSON.parse(atob(token.split(".")[1])); } catch (_) { return {}; }
+  }
+
+  function showAuthState(loggedIn) {
+    if (cardHeader) cardHeader.classList.toggle("hidden", loggedIn);
+    loginPanel.classList.toggle("hidden", loggedIn);
+    consolePanel.classList.toggle("hidden", !loggedIn);
+    if (!loggedIn) {
+      topStatus.textContent = "未登录";
+      topStatus.className = "status";
+      return;
+    }
+    const roles = (currentUser && currentUser.roles) ? currentUser.roles.join(",") : "-";
+    topStatus.textContent = `已登录：${currentUser?.username || "-"} (${roles})`;
+    topStatus.className = "status ok";
+    updateTenantActionButtonsForRole();
+  }
+
+  function fillKv(containerId, rows) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!rows || !rows.length) {
+      el.innerHTML = "";
+      return;
+    }
+    el.innerHTML = rows
+      .map(
+        ([k, v]) =>
+          `<div class="kv-row"><span class="kv-k">${escHtml(k)}</span><span class="kv-v mono">${escHtml(v)}</span></div>`,
+      )
+      .join("");
+  }
+
+  function setBanner(id, kind, title, body = "") {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!kind || kind === "hidden") {
+      el.className = "banner hidden";
+      el.innerHTML = "";
+      return;
+    }
+    el.className = `banner ${kind === "ok" ? "ok" : "err"}`;
+    el.innerHTML = `<strong>${escHtml(title)}</strong>${body ? `<div>${escHtml(body)}</div>` : ""}`;
+  }
+
+  function summarizeApi(resp) {
+    const rows = [];
+    if (resp == null) return [["响应", "—"]];
+    if (typeof resp !== "object") return [["响应", String(resp)]];
+    if (typeof resp.success === "boolean") rows.push(["success", String(resp.success)]);
+    if (resp.message != null && resp.message !== "") rows.push(["message", String(resp.message)]);
+    const d = resp.data;
+    if (d != null && typeof d === "object" && !Array.isArray(d)) {
+      const keys = Object.keys(d).slice(0, 14);
+      for (const k of keys) {
+        const v = d[k];
+        if (v !== null && typeof v === "object") rows.push([`data.${k}`, Array.isArray(v) ? `数组 ${v.length} 项` : "对象（已折叠）"]);
+        else rows.push([`data.${k}`, String(v)]);
+      }
+    } else if (d != null) rows.push(["data", String(d)]);
+    if (resp.meta && typeof resp.meta === "object") {
+      for (const [k, v] of Object.entries(resp.meta).slice(0, 10)) rows.push([`meta.${k}`, String(v)]);
+    }
+    if (!rows.length) rows.push(["摘要", "已收到响应（无可展示标量字段）"]);
+    return rows;
+  }
+
+  function renderTenantPayload(payload) {
+    const hint = document.getElementById("tenantDetailHint");
+    const root = payload && typeof payload === "object" && payload.data !== undefined ? payload.data : payload;
+    const rows = [];
+    if (root && typeof root === "object" && root.meta && !root.id) {
+      if (root.meta.total != null) rows.push(["列表总记录数", String(root.meta.total)]);
+      if (root.meta.page != null) rows.push(["当前页码", String(root.meta.page)]);
+      if (root.meta.page_size != null) rows.push(["每页条数", String(root.meta.page_size)]);
+    }
+    const usageFlat =
+      root &&
+      typeof root === "object" &&
+      !root.id &&
+      (root.workspace_count !== undefined ||
+        root.document_count !== undefined ||
+        root.api_calls_today !== undefined ||
+        root.storage_used_gb !== undefined);
+    if (usageFlat) {
+      for (const [k, v] of Object.entries(root)) rows.push([k, String(v)]);
+    }
+    if (root && typeof root === "object" && root.id) {
+      rows.push(["租户 ID", String(root.id)]);
+      rows.push(["名称", root.name != null ? String(root.name) : "—"]);
+      rows.push(["历史计划字段", root.plan != null ? String(root.plan) : "—"]);
+      rows.push(["状态", root.status != null ? String(root.status) : "—"]);
+      rows.push(["联系邮箱", root.contact_email != null ? String(root.contact_email) : "—"]);
+      if (root.quota && typeof root.quota === "object") {
+        for (const [k, v] of Object.entries(root.quota)) rows.push([`配额.${k}`, String(v)]);
+      }
+      if (root.usage && typeof root.usage === "object") {
+        for (const [k, v] of Object.entries(root.usage)) rows.push([`用量.${k}`, String(v)]);
+      }
+    }
+    if (!rows.length) {
+      if (hint) hint.textContent = "暂无可展示的字段摘要。";
+      fillKv("tenantKv", []);
+      return;
+    }
+    if (hint) hint.textContent = "";
+    fillKv("tenantKv", rows);
+  }
+
+  function renderOpDetail(detail, tasks) {
+    const hint = document.getElementById("opDetailHint");
+    const doc = detail && typeof detail === "object" && detail.data !== undefined ? detail.data : detail;
+    const rows = [];
+    const pick = (k) => {
+      if (doc && doc[k] != null && doc[k] !== "") rows.push([k, String(doc[k])]);
+    };
+    pick("operation_id");
+    pick("id");
+    pick("action");
+    pick("status");
+    pick("tenant_id");
+    pick("operator_name");
+    pick("created_at");
+    pick("updated_at");
+    pick("error_message");
+    const tlist = tasks && typeof tasks === "object" ? tasks.data : null;
+    if (Array.isArray(tlist)) rows.push(["关联任务", `${tlist.length} 条`]);
+    if (!rows.length) rows.push(...summarizeApi(detail));
+    if (hint) hint.textContent = "";
+    fillKv("opKv", rows);
+  }
+
+  function renderAuditRow(row) {
+    const hint = document.getElementById("auditDetailHint");
+    const rows = [];
+    if (!row || typeof row !== "object") {
+      if (hint) hint.textContent = "未选中记录。";
+      fillKv("auditKv", []);
+      return;
+    }
+    for (const [k, v] of Object.entries(row)) {
+      if (v !== null && typeof v === "object") rows.push([k, Array.isArray(v) ? `数组 ${v.length} 项` : "对象（已折叠）"]);
+      else rows.push([k, String(v)]);
+    }
+    if (hint) hint.textContent = "";
+    fillKv("auditKv", rows.slice(0, 48));
+  }
+
+  function renderRolesChips(roles) {
+    const host = document.getElementById("rolesChips");
+    if (!host) return;
+    const list = Array.isArray(roles) ? roles : [];
+    if (!list.length) {
+      host.innerHTML = `<span class="detail-empty" style="margin:0;">暂无角色数据</span>`;
+      return;
+    }
+    host.innerHTML = list.map((r) => `<span class="chip">${escHtml(String(r))}</span>`).join("");
+  }
+
+  function showToolResult(ok, respOrErr) {
+    if (ok) {
+      setBanner("toolBanner", "ok", "命令已执行", "");
+      fillKv("toolKv", summarizeApi(respOrErr));
+    } else {
+      setBanner("toolBanner", "err", "命令失败", String(respOrErr));
+      fillKv("toolKv", [["错误", String(respOrErr)]]);
+    }
+  }
+
+  function setGlobalError(msg = "") { globalErr.textContent = msg || ""; }
+
+  function updateSelectedTenantHint() {
+    const el = document.getElementById("tenantSelectedHint");
+    if (!el) return;
+    if (!selectedTenantId) {
+      el.textContent = "当前未选中租户";
+      return;
+    }
+    el.textContent = `当前选中租户：${selectedTenantId}`;
+  }
+
+  function setTenantActionPanelVisible(visible) {
+    const panel = document.getElementById("tenantActionPanel");
+    if (panel) panel.classList.toggle("hidden", !visible);
+  }
+
+  function updateTenantActionButtonsForRole() {
+    const isSuper = new Set(currentUser?.roles || []).has("super_admin");
+    const del = document.getElementById("btnDetailDelete");
+    if (del) { del.disabled = !isSuper; del.title = isSuper ? "" : "仅 super_admin 可删除租户"; }
+  }
+
+  async function refreshSelectedTenantDetail() {
+    if (!selectedTenantId) return;
+    const detail = await api(`/api/v1/operations/tenants/${encodeURIComponent(selectedTenantId)}`);
+    renderTenantPayload(detail);
+  }
+
+  function clearResultPanels() {
+    setBanner("tenantActionBanner", "hidden");
+    setBanner("toolBanner", "hidden");
+    fillKv("dashKv", []);
+    fillKv("tenantKv", []);
+    fillKv("opKv", []);
+    fillKv("auditKv", []);
+    fillKv("toolKv", []);
+    renderRolesChips([]);
+    const th = document.getElementById("tenantDetailHint");
+    if (th) th.textContent = "在左侧列表中点击一条租户，将在此处以表格形式展示详情与用量。";
+    const oh = document.getElementById("opDetailHint");
+    if (oh) oh.textContent = "点击左侧表格中的记录，在此查看结构化字段（不展示整段 JSON）。";
+    const ah = document.getElementById("auditDetailHint");
+    if (ah) ah.textContent = "点击左侧表格中的记录查看字段摘要。";
+  }
+
+  function handleUnauthorized(message) {
+    clearToken();
+    currentUser = null;
+    selectedTenantId = "";
+    updateSelectedTenantHint();
+    clearResultPanels();
+    showAuthState(false);
+    setGlobalError("");
+    loginErr.textContent = message || "登录已失效，请重新登录";
+  }
+
+  async function api(path, opts = {}) {
+    const resp = await fetch(path, {
+      method: opts.method || "GET",
+      headers: headers(opts.headers || {}),
+      body: opts.body || undefined,
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (resp.status === 401) {
+      handleUnauthorized("会话已过期或无效，请重新登录");
+      throw new Error("会话已失效（401），请重新登录");
+    }
+    if (!resp.ok) {
+      const msg = data?.detail?.error?.message || data?.detail?.message || data?.detail || JSON.stringify(data);
+      throw new Error(`HTTP ${resp.status}: ${msg}`);
+    }
+    return data;
+  }
+
+  async function initFromToken() {
+    const token = getToken();
+    showAuthState(false);
+    if (!token) return;
+    try {
+      const me = await api("/api/v1/auth/me");
+      currentUser = {
+        username: me?.data?.username || parseJwt(token).sub || "unknown",
+        roles: me?.data?.roles || parseJwt(token).roles || [],
+      };
+      showAuthState(true);
+      await refreshDashboard();
+    } catch (_) {
+      // api() 内已经处理 401 为退回登录态；此处仅兜底避免初始化中断。
+    }
+  }
+
+  document.getElementById("btnTryDefault").onclick = () => {
+    document.getElementById("loginUsername").value = "admin";
+    document.getElementById("loginPassword").value = "";
+  };
+
+  document.getElementById("btnLogin").onclick = async () => {
+    loginErr.textContent = "";
+    try {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      if (!username || !password) throw new Error("用户名或密码不能为空");
+      const data = await api("/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const token = data?.data?.access_token;
+      if (!token) throw new Error("登录响应缺少 access_token");
+      setToken(token);
+      const me = await api("/api/v1/auth/me");
+      currentUser = { username: me?.data?.username || username, roles: me?.data?.roles || [] };
+      showAuthState(true);
+      await refreshDashboard();
+    } catch (e) {
+      loginErr.textContent = e.message || String(e);
+    }
+  };
+
+  document.getElementById("btnLogout").onclick = () => {
+    clearToken();
+    currentUser = null;
+    selectedTenantId = "";
+    updateSelectedTenantHint();
+    clearResultPanels();
+    showAuthState(false);
+  };
+
+  function writeExecStripVisible(tab) {
+    const strip = document.getElementById("writeExecStrip");
+    if (!strip) return;
+    strip.classList.toggle("hidden", tab !== "tools" && tab !== "tenants");
+  }
+
+  /** @param {{ requireTenant?: boolean }} [opt] */
+  function readWriteContext(opt = {}) {
+    const requireTenant = opt.requireTenant !== false;
+    const tenantField = document.getElementById("toolTenant").value.trim();
+    const tenantId = tenantField || (requireTenant ? selectedTenantId : "");
+    let opId = document.getElementById("toolOpId").value.trim();
+    const operator = document.getElementById("toolOperator").value.trim() || "super_admin_ui";
+    if (!opId) {
+      opId = `ops-ui-${Date.now()}`;
+      document.getElementById("toolOpId").value = opId;
+    }
+    if (requireTenant && !tenantId) {
+      throw new Error("请填写 tenant_id，或先在「租户管理」选中租户后点「填入当前选中租户」");
+    }
+    return { tenantId, opId, operator };
+  }
+
+  // 侧栏导航
+  for (const btn of document.querySelectorAll(".nav-item[data-tab]")) {
+    btn.onclick = () => {
+      const tab = btn.getAttribute("data-tab");
+      for (const b of document.querySelectorAll(".nav-item[data-tab]")) b.classList.toggle("active", b === btn);
+      for (const panel of document.querySelectorAll("section[id^='tab-']")) {
+        panel.classList.toggle("hidden", panel.id !== `tab-${tab}`);
+      }
+      if (pageTitleEl && tab) pageTitleEl.textContent = PAGE_TITLES[tab] || tab;
+      writeExecStripVisible(tab);
+      setGlobalError("");
+    };
+  }
+
+  async function refreshDashboard() {
+    try {
+      setGlobalError("");
+      const [me, tenants, ops, upstream] = await Promise.all([
+        api("/api/v1/auth/me"),
+        api("/api/v1/operations/tenants?page=1&page_size=20"),
+        api("/api/v1/operations?page=1&page_size=20"),
+        api("/api/v1/operations/health/upstream").catch((e) => ({ error: e.message || String(e) })),
+      ]);
+      const meData = me.data || {};
+      const tData = tenants.data || [];
+      const oData = ops.data || [];
+      document.getElementById("dashUser").textContent = meData.username || "-";
+      document.getElementById("dashRoles").textContent = (meData.roles || []).join(",") || "-";
+      document.getElementById("dashTenantCount").textContent = String(tenants.meta?.total ?? tData.length);
+      document.getElementById("dashOpCount").textContent = String(ops.meta?.total ?? oData.length);
+      const upEl = document.getElementById("dashUpstream");
+      upEl.className = "v";
+      if (upstream && upstream.error) {
+        upEl.textContent = "探测失败";
+        upEl.classList.add("metric-bad");
+      } else if (upstream && upstream.status === "ok") {
+        upEl.textContent = "可达";
+        upEl.classList.add("metric-good");
+      } else {
+        upEl.textContent = upstream?.status === "degraded" ? "降级" : "异常";
+        upEl.classList.add("metric-warn");
+      }
+      const pw = upstream && upstream.prewarm;
+      const prewarmText = pw
+        ? `成功 ${pw.warmed ?? 0}/${pw.total ?? 0}，失败 ${(pw.failures && pw.failures.length) || pw.failed || 0}`
+        : "—";
+      fillKv("dashKv", [
+        ["租户列表（分页）", `第 ${tenants.meta?.page ?? 1} 页，共 ${tenants.meta?.total ?? tData.length} 条`],
+        ["操作记录（分页）", `第 ${ops.meta?.page ?? 1} 页，共 ${ops.meta?.total ?? oData.length} 条`],
+        ["上游存活", upstream?.upstream_payload?.status || upstream?.status || "—"],
+        ["上游预热", prewarmText],
+      ]);
+    } catch (e) {
+      setGlobalError(e.message || String(e));
+    }
+  }
+
+  document.getElementById("btnDashRefresh").onclick = refreshDashboard;
+
+  document.getElementById("btnFillSelectedTenant").onclick = () => {
+    if (!selectedTenantId) {
+      setGlobalError("请先在「租户管理」列表中点击选择一条租户");
+      return;
+    }
+    document.getElementById("toolTenant").value = selectedTenantId;
+    updateSelectedTenantHint();
+    setGlobalError("");
+  };
+  document.getElementById("btnGenOpId").onclick = () => {
+    document.getElementById("toolOpId").value = `ops-ui-${Date.now()}`;
+  };
+  document.getElementById("btnDetailDelete").onclick = async () => {
+    try {
+      setGlobalError("");
+      setBanner("tenantActionBanner", "hidden");
+      if (!selectedTenantId) throw new Error("请先在左侧表格中选择租户");
+      if (!confirm("确认删除该租户？此操作为软删除（标记已删除）。")) return;
+      if (!confirm("再次确认：将调用删除接口，请确保已备份或无需保留数据。")) return;
+      const { tenantId, opId, operator } = readWriteContext();
+      await api(`/api/v1/operations/tenants/${encodeURIComponent(tenantId)}`, {
+        method: "DELETE",
+        headers: { "X-Op-Id": opId, "X-Operator": operator },
+      });
+      setBanner("tenantActionBanner", "ok", "租户已删除", "列表可重新查询以刷新");
+      selectedTenantId = "";
+      document.getElementById("toolTenant").value = "";
+      updateSelectedTenantHint();
+      setTenantActionPanelVisible(false);
+      renderTenantPayload({});
+      fillKv("tenantKv", []);
+      const th = document.getElementById("tenantDetailHint");
+      if (th) th.textContent = "租户已删除，请重新查询列表。";
+    } catch (e) {
+      setBanner("tenantActionBanner", "err", "删除失败", e.message || String(e));
+    }
+  };
+
+  document.getElementById("btnTenantGotoTools").onclick = () => {
+    document.querySelector(".nav-item[data-tab='tools']")?.click();
+  };
+
+  function renderRows(tbodyId, rows, cols, onClick) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = rows.map((r, idx) => {
+      return `<tr data-i="${idx}">${cols.map((c) => `<td class="${c.mono ? "mono" : ""}">${escHtml(c.get(r))}</td>`).join("")}</tr>`;
+    }).join("");
+    if (onClick) {
+      for (const tr of tbody.querySelectorAll("tr[data-i]")) {
+        tr.onclick = () => {
+          for (const row of tbody.querySelectorAll("tr[data-i]")) row.classList.remove("selected");
+          tr.classList.add("selected");
+          onClick(rows[Number(tr.getAttribute("data-i"))]);
+        };
+      }
+    }
+  }
+
+  // tenants
+  document.getElementById("btnLoadTenants").onclick = async () => {
+    try {
+      setGlobalError("");
+      setBanner("tenantActionBanner", "hidden");
+      setTenantActionPanelVisible(false);
+      selectedTenantId = "";
+      updateSelectedTenantHint();
+      const q = new URLSearchParams({ page: "1", page_size: "100" });
+      const keyword = document.getElementById("tenantKeyword").value.trim();
+      const status = document.getElementById("tenantStatus").value.trim();
+      if (keyword) q.set("keyword", keyword);
+      if (status) q.set("status", status);
+      const data = await api(`/api/v1/operations/tenants?${q}`);
+      const rows = data.data || [];
+      renderRows("tenantTable", rows, [
+        { get: (r) => r.id, mono: true },
+        { get: (r) => r.name },
+        { get: (r) => r.plan || "—" },
+        { get: (r) => r.status },
+        { get: (r) => r.contact_email },
+      ], async (row) => {
+        selectedTenantId = row.id;
+        document.getElementById("toolTenant").value = row.id;
+        updateSelectedTenantHint();
+          setTenantActionPanelVisible(true);
+        updateTenantActionButtonsForRole();
+        const detail = await api(`/api/v1/operations/tenants/${encodeURIComponent(row.id)}`);
+        renderTenantPayload(detail);
+      });
+      const th = document.getElementById("tenantDetailHint");
+      if (th) th.textContent = `共 ${rows.length} 条，点击一行在右侧查看详情。`;
+      renderTenantPayload({ meta: data.meta, selectedTenantId: "" });
+    } catch (e) {
+      setGlobalError(e.message || String(e));
+    }
+  };
+
+  document.getElementById("btnTenantUsage").onclick = async () => {
+    try {
+      if (!selectedTenantId) throw new Error("请先在租户列表中选择一个租户");
+      const usage = await api(`/api/v1/operations/tenants/${encodeURIComponent(selectedTenantId)}/usage`);
+      renderTenantPayload(usage);
+    } catch (e) {
+      setGlobalError(e.message || String(e));
+    }
+  };
+
+  // operations
+  document.getElementById("btnLoadOps").onclick = async () => {
+    try {
+      const q = new URLSearchParams({ page: "1", page_size: "100" });
+      const tenant = document.getElementById("opTenantId").value.trim();
+      const action = document.getElementById("opAction").value.trim();
+      const status = document.getElementById("opStatus").value.trim();
+      if (tenant) q.set("tenant_id", tenant);
+      if (action) q.set("action", action);
+      if (status) q.set("status", status);
+      const data = await api(`/api/v1/operations?${q}`);
+      const rows = data.data || [];
+      renderRows("opTable", rows, [
+        { get: (r) => r.operation_id || r.id, mono: true },
+        { get: (r) => r.action },
+        { get: (r) => r.status },
+        { get: (r) => r.tenant_id, mono: true },
+        { get: (r) => r.created_at || "-" },
+      ], async (row) => {
+        const id = row.operation_id || row.id;
+        const detail = await api(`/api/v1/operations/${encodeURIComponent(id)}`);
+        let tasks = {};
+        try { tasks = await api(`/api/v1/operations/${encodeURIComponent(id)}/tasks`); } catch (_) {}
+        renderOpDetail(detail, tasks);
+      });
+      const oh = document.getElementById("opDetailHint");
+      if (oh) oh.textContent = `共 ${rows.length} 条，点击一行在右侧查看详情。`;
+      fillKv("opKv", [
+        ["列表总记录数", String(data.meta?.total ?? rows.length)],
+        ["当前页", String(data.meta?.page ?? 1)],
+        ["每页条数", String(data.meta?.page_size ?? "—")],
+      ]);
+    } catch (e) {
+      setGlobalError(e.message || String(e));
+    }
+  };
+
+  // audit
+  document.getElementById("btnLoadAudit").onclick = async () => {
+    try {
+      const q = new URLSearchParams({ page: "1", page_size: "100" });
+      const tenant = document.getElementById("auditTenant").value.trim();
+      const action = document.getElementById("auditAction").value.trim();
+      const status = document.getElementById("auditStatus").value.trim();
+      if (tenant) q.set("tenant_id", tenant);
+      if (action) q.set("action", action);
+      if (status) q.set("status", status);
+      const data = await api(`/api/v1/operations/audit/logs?${q}`);
+      const rows = data.data || [];
+      renderRows("auditTable", rows, [
+        { get: (r) => r.id, mono: true },
+        { get: (r) => r.action },
+        { get: (r) => r.resource_type || "-" },
+        { get: (r) => r.status || "-" },
+        { get: (r) => r.created_at || "-" },
+      ], (row) => renderAuditRow(row));
+      const ah = document.getElementById("auditDetailHint");
+      if (ah) ah.textContent = `共 ${rows.length} 条，点击一行在右侧查看字段。`;
+      fillKv("auditKv", [
+        ["列表总记录数", String(data.meta?.total ?? rows.length)],
+        ["当前页", String(data.meta?.page ?? 1)],
+      ]);
+    } catch (e) {
+      setGlobalError(e.message || String(e));
+    }
+  };
+
+  // users
+  async function reloadUsers() {
+    const [users, roles] = await Promise.all([api("/api/v1/users"), api("/api/v1/roles")]);
+    const rows = users.data || [];
+    renderRows("userTable", rows, [
+      { get: (r) => r.id, mono: true },
+      { get: (r) => r.username },
+      { get: (r) => r.is_active },
+      { get: (r) => (r.roles || []).join(",") },
+    ]);
+    renderRolesChips(roles.data || []);
+  }
+
+  document.getElementById("btnLoadUsers").onclick = async () => {
+    try { await reloadUsers(); } catch (e) { setGlobalError(e.message || String(e)); }
+  };
+
+  document.getElementById("btnCreateUser").onclick = async () => {
+    try {
+      const username = document.getElementById("newUsername").value.trim();
+      const password = document.getElementById("newPassword").value;
+      const roles = document.getElementById("newRoles").value.split(",").map((s) => s.trim()).filter(Boolean);
+      await api("/api/v1/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, roles }),
+      });
+      await reloadUsers();
+    } catch (e) { setGlobalError(e.message || String(e)); }
+  };
+
+  document.getElementById("btnUpdateUser").onclick = async () => {
+    try {
+      const username = document.getElementById("updUsername").value.trim();
+      const password = document.getElementById("updPassword").value;
+      const isActive = document.getElementById("updActive").value;
+      const payload = {};
+      if (password) payload.password = password;
+      if (isActive === "true") payload.is_active = true;
+      if (isActive === "false") payload.is_active = false;
+      await api(`/api/v1/users/${encodeURIComponent(username)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      await reloadUsers();
+    } catch (e) { setGlobalError(e.message || String(e)); }
+  };
+
+  document.getElementById("btnDeleteUser").onclick = async () => {
+    try {
+      const username = document.getElementById("updUsername").value.trim();
+      if (!username) throw new Error("请输入要删除的用户名");
+      if (!confirm(`确认删除用户 ${username} ?`)) return;
+      await api(`/api/v1/users/${encodeURIComponent(username)}`, { method: "DELETE" });
+      await reloadUsers();
+    } catch (e) { setGlobalError(e.message || String(e)); }
+  };
+
+  document.getElementById("btnAssignRoles").onclick = async () => {
+    try {
+      const username = document.getElementById("roleUsername").value.trim();
+      const roles = document.getElementById("roleList").value.split(",").map((s) => s.trim()).filter(Boolean);
+      await api(`/api/v1/users/${encodeURIComponent(username)}/roles`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roles }),
+      });
+      await reloadUsers();
+    } catch (e) { setGlobalError(e.message || String(e)); }
+  };
+
+  // tools (运维命令)
+  document.getElementById("btnQuotaUpdate").onclick = async () => {
+    try {
+      setGlobalError("");
+      setBanner("toolBanner", "hidden");
+      const { tenantId, opId, operator } = readWriteContext();
+      const body = {
+        quota_type: document.getElementById("toolQuotaType").value,
+        value: Number(document.getElementById("toolQuotaValue").value),
+        reason: document.getElementById("toolQuotaReason").value.trim() || "ops-center-ui",
+      };
+      const resp = await api(`/api/v1/operations/tenants/${encodeURIComponent(tenantId)}/quota`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Op-Id": opId, "X-Operator": operator },
+        body: JSON.stringify(body),
+      });
+      showToolResult(true, resp);
+    } catch (e) {
+      showToolResult(false, e.message || String(e));
+    }
+  };
+
+  document.getElementById("btnReindex").onclick = async () => {
+    try {
+      setGlobalError("");
+      setBanner("toolBanner", "hidden");
+      if (!confirm("确认派发文档重建索引异步任务？可能长时间占用 worker。")) return;
+      const { opId, operator } = readWriteContext({ requireTenant: false });
+      const rowTenant = document.getElementById("toolReindexTenant").value.trim();
+      const stripTenant = document.getElementById("toolTenant").value.trim() || selectedTenantId;
+      const tenant_id = rowTenant || stripTenant;
+      if (!tenant_id) throw new Error("请填写 tenant_id：可在上栏「写操作执行上下文」或本表单「tenant_id」填写");
+      const body = { tenant_id };
+      const ds = document.getElementById("toolReindexDataset").value.trim();
+      const doc = document.getElementById("toolReindexDocument").value.trim();
+      if (ds) body.dataset_id = ds;
+      if (doc) body.document_id = doc;
+      const resp = await api("/api/v1/operations/documents/reindex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Op-Id": opId, "X-Operator": operator },
+        body: JSON.stringify(body),
+      });
+      showToolResult(true, resp);
+    } catch (e) {
+      showToolResult(false, e.message || String(e));
+    }
+  };
+
+  document.getElementById("btnCacheInvalidate").onclick = async () => {
+    try {
+      setGlobalError("");
+      setBanner("toolBanner", "hidden");
+      if (!confirm("确认执行业务侧 Redis 缓存失效，并清空运维中心本地只读缓存？")) return;
+      const { opId, operator } = readWriteContext({ requireTenant: false });
+      const scopesRaw = document.getElementById("toolCacheScopes").value.trim();
+      const scopes = scopesRaw.split(",").map((s) => s.trim()).filter(Boolean);
+      if (!scopes.length) throw new Error("请至少填写一个 scope（英文逗号分隔）");
+      const tenantRaw = document.getElementById("toolCacheTenant").value.trim();
+      const body = { scopes };
+      if (tenantRaw) body.tenant_id = tenantRaw;
+      const resp = await api("/api/v1/operations/cache/invalidate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Op-Id": opId, "X-Operator": operator },
+        body: JSON.stringify(body),
+      });
+      showToolResult(true, resp);
+    } catch (e) {
+      showToolResult(false, e.message || String(e));
+    }
+  };
+
+  updateSelectedTenantHint();
+  updateTenantActionButtonsForRole();
+  initFromToken();
+})();
+</script>
+</body>
+</html>
